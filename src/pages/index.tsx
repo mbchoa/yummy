@@ -1,10 +1,32 @@
 import { type NextPage } from "next";
+import { signIn, signOut } from "next-auth/react";
 import Head from "next/head";
-import { signIn, signOut, useSession } from "next-auth/react";
-
-import { trpc } from "../utils/trpc";
+import { useRouter } from "next/router";
+import { LoggingIn } from "../components/loggingIn";
+import { useRequireAuth } from "../hooks/useRequireAuth";
 
 const Home: NextPage = () => {
+  const router = useRouter();
+  const { session: sessionData, loading } = useRequireAuth();
+
+  if (
+    loading === true ||
+    sessionData == null ||
+    sessionData.user == null ||
+    router.isReady === false
+  ) {
+    return <LoggingIn />;
+  }
+
+  if (
+    loading === false &&
+    sessionData !== null &&
+    sessionData.user !== null &&
+    router.isReady === true
+  ) {
+    router.push("/dashboard");
+  }
+
   return (
     <>
       <Head>
@@ -18,7 +40,26 @@ const Home: NextPage = () => {
             yu<span className="text-[hsl(280,100%,70%)]">mm</span>y
           </h1>
           <div className="flex flex-col items-center gap-2">
-            <AuthShowcase />
+            <div className="flex flex-col items-center justify-center gap-4">
+              <p className="text-center text-2xl text-white">
+                {sessionData && (
+                  <span>Logged in as {sessionData.user.name}</span>
+                )}
+              </p>
+              <button
+                className="rounded-full bg-white/10 px-10 py-3 font-semibold text-white no-underline transition hover:bg-white/20"
+                onClick={
+                  sessionData
+                    ? () => signOut()
+                    : () =>
+                        signIn("auth0", {
+                          callbackUrl: "/dashboard",
+                        })
+                }
+              >
+                Sign in
+              </button>
+            </div>
           </div>
         </div>
       </main>
@@ -27,27 +68,3 @@ const Home: NextPage = () => {
 };
 
 export default Home;
-
-const AuthShowcase: React.FC = () => {
-  const { data: sessionData } = useSession();
-
-  const { data: secretMessage } = trpc.auth.getSecretMessage.useQuery(
-    undefined, // no input
-    { enabled: sessionData?.user !== undefined },
-  );
-
-  return (
-    <div className="flex flex-col items-center justify-center gap-4">
-      <p className="text-center text-2xl text-white">
-        {sessionData && <span>Logged in as {sessionData.user?.name}</span>}
-        {secretMessage && <span> - {secretMessage}</span>}
-      </p>
-      <button
-        className="rounded-full bg-white/10 px-10 py-3 font-semibold text-white no-underline transition hover:bg-white/20"
-        onClick={sessionData ? () => signOut() : () => signIn("auth0")}
-      >
-        {sessionData ? "Sign out" : "Sign in"}
-      </button>
-    </div>
-  );
-};
