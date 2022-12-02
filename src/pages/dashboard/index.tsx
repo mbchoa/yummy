@@ -1,5 +1,5 @@
 import { useRouter } from "next/router";
-import { DashboardLayout } from "../../components/dashboardLayout";
+import { Layout } from "../../components/layout";
 import { LoggingIn } from "../../components/loggingIn";
 import { useRequireAuth } from "../../hooks/useRequireAuth";
 
@@ -16,5 +16,5 @@ export default function Dashboard() {
     return <LoggingIn />;
   }
 
-  return <DashboardLayout>Dashboard stuff</DashboardLayout>;
+  return <Layout>Dashboard stuff</Layout>;
 }

@@ -32,9 +32,7 @@ function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
 }
 
-export const DashboardLayout: React.FC<IDashboardLayoutProps> = ({
-  children,
-}) => {
+export const Layout: React.FC<IDashboardLayoutProps> = ({ children }) => {
   const { session } = useRequireAuth();
   return (
     <>
