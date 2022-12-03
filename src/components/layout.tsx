@@ -175,7 +175,7 @@ export const Layout: React.FC<IDashboardLayoutProps> = ({ children }) => {
           </>
         )}
       </Disclosure>
-      <main className="h-screen bg-gray-100">
+      <main className="h-full bg-gray-100">
         <div className="mx-4 flex h-full">{children}</div>
       </main>
     </>
