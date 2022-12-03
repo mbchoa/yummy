@@ -17,4 +17,7 @@ export const restaurantRouter = router({
         },
       });
     }),
+  all: protectedProcedure.query(({ ctx }) => {
+    return ctx.prisma.restaurant.findMany();
+  }),
 });
