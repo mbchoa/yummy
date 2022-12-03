@@ -69,13 +69,21 @@ model VerificationToken {
 
 model Restaurant {
   id                  String               @id @default(cuid())
+  alias               String
   name                String
-  address             String
+  imageUrl            String
+  isClosed            Boolean
+  url                 String
+  reviewCount         Int
+  rating              Int
+  price               String
+  address1            String
+  address2            String
+  address3            String
   city                String
+  country             String
   state               String
-  zip                 String
-  phone               String
-  website             String
+  distance            Float
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
   favoriteRestaurants FavoriteRestaurant[]
