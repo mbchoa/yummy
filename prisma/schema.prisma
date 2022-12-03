@@ -78,9 +78,10 @@ model Restaurant {
   rating              Int
   price               String
   address1            String
-  address2            String
-  address3            String
+  address2            String?
+  address3            String?
   city                String
+  zipCode             String
   country             String
   state               String
   distance            Float

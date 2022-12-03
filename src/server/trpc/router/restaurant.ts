@@ -4,7 +4,7 @@ import { protectedProcedure, router } from "../trpc";
 export const restaurantRouter = router({
   add: protectedProcedure
     .input(YelpRestaurantSchema)
-    .query(({ input, ctx }) => {
+    .mutation(({ input, ctx }) => {
       return ctx.prisma.restaurant.upsert({
         where: {
           id: input.id,
