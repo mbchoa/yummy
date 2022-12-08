@@ -3,8 +3,13 @@
 @tailwind utilities;
 
 @layer base {
+  html,
   body {
-    @apply min-h-screen subpixel-antialiased;
+    @apply h-full;
+  }
+
+  body {
+    @apply bg-gray-100 subpixel-antialiased;
     text-rendering: geometricPrecision;
     shape-rendering: geometricPrecision;
   }
