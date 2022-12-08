@@ -1,4 +1,4 @@
-import { YelpRestaurantSchema } from "../../../models/YelpRestaurantSchema";
+import { YelpRestaurantSchema } from "../../../models/YelpSchemas";
 import { protectedProcedure, router } from "../trpc";
 
 export const restaurantRouter = router({

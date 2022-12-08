@@ -1,7 +1,8 @@
+import type { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
-
 import { type Context } from "./context";
+import type { AppRouter } from "./router/_app";
 
 const t = initTRPC.context<Context>().create({
   transformer: superjson,
@@ -37,3 +38,6 @@ const isAuthed = t.middleware(({ ctx, next }) => {
  * Protected procedure
  **/
 export const protectedProcedure = t.procedure.use(isAuthed);
+
+export type RouterInput = inferRouterInputs<AppRouter>;
+export type RouterOutput = inferRouterOutputs<AppRouter>;

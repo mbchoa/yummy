@@ -1,6 +1,8 @@
 import got from "got";
 import qs from "querystring";
 import { z } from "zod";
+import { camelCaseKeys } from "../../../lib/camelCaseKeys";
+import type { IYelpBusinessSearchResponseSchema } from "../../../models/YelpSchemas";
 
 import { protectedProcedure, router } from "../trpc";
 
@@ -11,14 +13,14 @@ export const yelpRouter = router({
         location: z.string(),
         term: z.string(),
         radius: z.number().min(0).max(40000).default(40000),
-        limit: z.number().min(0).max(50).default(20),
+        limit: z.number().min(0).max(50).default(8),
         sortBy: z
           .enum(["best_match", "rating", "review_count", "distance"])
           .default("best_match"),
       })
     )
-    .mutation(({ input }) => {
-      return got(
+    .query(async ({ input }) => {
+      const response = await got(
         `https://api.yelp.com/v3/businesses/search?${qs.stringify(input)}`,
         {
           headers: {
@@ -26,7 +28,8 @@ export const yelpRouter = router({
             "Content-Type": "application/json",
           },
         }
-      ).json();
+      ).json<IYelpBusinessSearchResponseSchema>();
+      return camelCaseKeys<IYelpBusinessSearchResponseSchema>(response);
     }),
   byId: protectedProcedure
     .input(z.object({ id: z.string() }))

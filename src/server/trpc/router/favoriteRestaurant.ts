@@ -1,4 +1,5 @@
-import { YelpRestaurantSchema } from "../../../models/YelpRestaurantSchema";
+import { z } from "zod";
+import { YelpRestaurantSchema } from "../../../models/YelpSchemas";
 import { protectedProcedure, router } from "../trpc";
 
 export const favoriteRestaurant = router({
@@ -6,6 +7,9 @@ export const favoriteRestaurant = router({
     return ctx.prisma.favoriteRestaurant.findMany({
       where: {
         userId: ctx.session.user.id,
+      },
+      include: {
+        restaurant: true,
       },
     });
   }),
@@ -20,6 +24,19 @@ export const favoriteRestaurant = router({
               userId: ctx.session.user.id,
             },
           },
+        },
+      });
+    }),
+  byId: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ input, ctx }) => {
+      return ctx.prisma.favoriteRestaurant.findUniqueOrThrow({
+        where: {
+          id: input.id,
+        },
+        include: {
+          restaurant: true,
+          reviews: true,
         },
       });
     }),
