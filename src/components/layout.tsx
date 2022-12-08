@@ -12,8 +12,9 @@ import {
 } from "@heroicons/react/24/outline";
 import { signOut } from "next-auth/react";
 import Image from "next/image";
-import React, { Fragment } from "react";
+import React, { Fragment, useEffect } from "react";
 import { useRequireAuth } from "../hooks/useRequireAuth";
+import { trpc } from "../utils/trpc";
 
 interface IDashboardLayoutProps {
   children: React.ReactNode;
@@ -34,6 +35,58 @@ function classNames(...classes: string[]) {
 
 export const Layout: React.FC<IDashboardLayoutProps> = ({ children }) => {
   const { session } = useRequireAuth();
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const [location, setLocation] = React.useState("");
+  const { data, refetch } = trpc.yelp.search.useQuery(
+    {
+      location,
+      term: searchTerm,
+    },
+    { enabled: false }
+  );
+
+  const maybeRenderSearchResults = React.useCallback(() => {
+    if (
+      data === undefined ||
+      data.businesses.length === 0 ||
+      searchTerm.length === 0 ||
+      location.length === 0
+    ) {
+      return null;
+    }
+
+    return data.businesses.map((business) => {
+      return (
+        <div key={business.id}>
+          <p>{business.name}</p>
+        </div>
+      );
+    });
+  }, [data, searchTerm, location]);
+
+  const handleSearchChange = React.useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setSearchTerm(event.target.value);
+    },
+    []
+  );
+
+  const handleLocationChange = React.useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setLocation(event.target.value);
+    },
+    []
+  );
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (searchTerm.length > 0 && location.length > 0) {
+        refetch();
+      }
+    }, 250);
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm, location, refetch]);
+
   return (
     <>
       <Disclosure as="nav" className="bg-gray-800">
@@ -175,8 +228,21 @@ export const Layout: React.FC<IDashboardLayoutProps> = ({ children }) => {
           </>
         )}
       </Disclosure>
-      <main className="h-full bg-gray-100">
-        <div className="mx-4 flex h-full">{children}</div>
+      <main className="h-full space-y-4 px-4 pt-4">
+        <div className="sticky">
+          <input
+            className="w-full rounded border px-3 py-2"
+            value={searchTerm}
+            onChange={handleSearchChange}
+          />
+          <input
+            className="w-full rounded border px-3 py-2"
+            value={location}
+            onChange={handleLocationChange}
+          />
+          {maybeRenderSearchResults()}
+        </div>
+        <div className="flex">{children}</div>
       </main>
     </>
   );
