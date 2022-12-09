@@ -59,7 +59,7 @@ export const Layout: React.FC<IDashboardLayoutProps> = ({ children }) => {
     }
 
     return (
-      <ul className="absolute top-full left-0 right-0 bg-white p-4">
+      <ul className="absolute top-full left-0 right-0 bg-white p-4 drop-shadow-xl">
         {data.businesses.map((business) => {
           return (
             <li key={business.id}>
