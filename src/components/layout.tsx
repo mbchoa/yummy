@@ -52,19 +52,24 @@ export const Layout: React.FC<IDashboardLayoutProps> = ({ children }) => {
       data === undefined ||
       data.businesses.length === 0 ||
       searchTerm.length === 0 ||
-      location.length === 0
+      location.length === 0 ||
+      (currentFocus !== "search" && currentFocus !== "location")
     ) {
       return null;
     }
 
-    return data.businesses.map((business) => {
-      return (
-        <div key={business.id}>
-          <p>{business.name}</p>
-        </div>
-      );
-    });
-  }, [data, searchTerm, location]);
+    return (
+      <ul className="absolute top-full left-0 right-0 bg-white pt-4">
+        {data.businesses.map((business) => {
+          return (
+            <li key={business.id}>
+              <p>{business.name}</p>
+            </li>
+          );
+        })}
+      </ul>
+    );
+  }, [data, searchTerm, location, currentFocus]);
 
   const handleSearchChange = React.useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -248,9 +253,9 @@ export const Layout: React.FC<IDashboardLayoutProps> = ({ children }) => {
           </>
         )}
       </Disclosure>
-      <main className="h-full space-y-4 px-4 pt-4">
+      <main className="h-full px-4 pt-4">
         <div
-          className="sticky space-y-4"
+          className="sticky"
           onFocus={handleFocusChange}
           onBlur={handleBlurChange}
         >
@@ -262,7 +267,7 @@ export const Layout: React.FC<IDashboardLayoutProps> = ({ children }) => {
           />
           {(currentFocus === "search" || currentFocus === "location") && (
             <input
-              className="w-full rounded border px-3 py-2"
+              className="mt-4 w-full rounded px-3 py-2"
               value={location}
               onChange={handleLocationChange}
               name="location"

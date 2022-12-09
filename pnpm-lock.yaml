@@ -18,6 +18,7 @@ specifiers:
   '@typescript-eslint/eslint-plugin': ^5.33.0
   '@typescript-eslint/parser': ^5.33.0
   autoprefixer: ^10.4.7
+  classnames: ^2.3.2
   eslint: ^8.26.0
   eslint-config-next: 13.0.2
   got: ^12.5.3
@@ -47,6 +48,7 @@ dependencies:
   '@trpc/next': 10.1.0_cwxt4q2xofmn75adky35bkvmly
   '@trpc/react-query': 10.1.0_6w4fappfojusde7o3jmgvyxwlu
   '@trpc/server': 10.1.0
+  classnames: 2.3.2
   got: 12.5.3
   lodash-es: 4.17.21
   next: 13.0.2_biqbaboplfbrettd7655fr4n2y
@@ -893,6 +895,10 @@ packages:
     optionalDependencies:
       fsevents: 2.3.2
     dev: true
+
+  /classnames/2.3.2:
+    resolution: {integrity: sha512-CSbhY4cFEJRe6/GQzIk5qXZ4Jeg5pcsP7b5peFSDpffpe1cqjASH/n9UTjBwOp6XpMSTwQ8Za2K5V02ueA7Tmw==}
+    dev: false
 
   /client-only/0.0.1:
     resolution: {integrity: sha512-IV3Ou0jSMzZrd3pZ48nLkT9DA7Ag1pnPzaiQhpW7c3RbcqqzvzzVu+L8gfqMp/8IM2MQtSiqaCxrrcfu8I8rMA==}
