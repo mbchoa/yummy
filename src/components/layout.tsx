@@ -37,6 +37,8 @@ export const Layout: React.FC<IDashboardLayoutProps> = ({ children }) => {
   const { session } = useRequireAuth();
   const [searchTerm, setSearchTerm] = React.useState("");
   const [location, setLocation] = React.useState("");
+  const [currentFocus, setCurrentFocus] = React.useState<string | undefined>();
+
   const { data, refetch } = trpc.yelp.search.useQuery(
     {
       location,
@@ -77,6 +79,24 @@ export const Layout: React.FC<IDashboardLayoutProps> = ({ children }) => {
     },
     []
   );
+
+  const handleFocusChange = React.useCallback(
+    (event: React.FocusEvent<HTMLInputElement>) => {
+      setCurrentFocus(event.target.name);
+    },
+    []
+  );
+
+  const handleBlurChange = React.useCallback(() => {
+    requestAnimationFrame(() => {
+      if (
+        document !== null &&
+        !(document.activeElement instanceof HTMLInputElement)
+      ) {
+        setCurrentFocus(undefined);
+      }
+    });
+  }, []);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -229,17 +249,25 @@ export const Layout: React.FC<IDashboardLayoutProps> = ({ children }) => {
         )}
       </Disclosure>
       <main className="h-full space-y-4 px-4 pt-4">
-        <div className="sticky">
+        <div
+          className="sticky space-y-4"
+          onFocus={handleFocusChange}
+          onBlur={handleBlurChange}
+        >
           <input
             className="w-full rounded border px-3 py-2"
             value={searchTerm}
             onChange={handleSearchChange}
+            name="search"
           />
-          <input
-            className="w-full rounded border px-3 py-2"
-            value={location}
-            onChange={handleLocationChange}
-          />
+          {(currentFocus === "search" || currentFocus === "location") && (
+            <input
+              className="w-full rounded border px-3 py-2"
+              value={location}
+              onChange={handleLocationChange}
+              name="location"
+            />
+          )}
           {maybeRenderSearchResults()}
         </div>
         <div className="flex">{children}</div>
