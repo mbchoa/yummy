@@ -8,7 +8,9 @@ export const camelCaseKeys = <
 ): SnakeToCamelCaseNested<T> => {
   if (Array.isArray(obj)) {
     return <SnakeToCamelCaseNested<T>>obj.map((v) => camelCaseKeys(v));
-  } else if (isPlainObject(obj)) {
+  }
+
+  if (isPlainObject(obj)) {
     return <SnakeToCamelCaseNested<T>>Object.keys(obj).reduce(
       (result, key) => ({
         ...result,
@@ -17,5 +19,6 @@ export const camelCaseKeys = <
       {}
     );
   }
+
   return obj;
 };
