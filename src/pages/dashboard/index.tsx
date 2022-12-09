@@ -16,7 +16,9 @@ export default function Dashboard() {
     }
 
     if (favoriteRestaurants.length === 0) {
-      return <p>You have no favorite restaurants yet.</p>;
+      return (
+        <p className="w-full p-4">You have no favorite restaurants yet.</p>
+      );
     }
 
     return (

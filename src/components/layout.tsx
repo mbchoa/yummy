@@ -59,7 +59,7 @@ export const Layout: React.FC<IDashboardLayoutProps> = ({ children }) => {
     }
 
     return (
-      <ul className="absolute top-full left-0 right-0 bg-white pt-4">
+      <ul className="absolute top-full left-0 right-0 bg-white p-4">
         {data.businesses.map((business) => {
           return (
             <li key={business.id}>
@@ -253,9 +253,9 @@ export const Layout: React.FC<IDashboardLayoutProps> = ({ children }) => {
           </>
         )}
       </Disclosure>
-      <main className="h-full px-4 pt-4">
+      <main className="h-full">
         <div
-          className="sticky"
+          className="sticky p-4"
           onFocus={handleFocusChange}
           onBlur={handleBlurChange}
         >
@@ -267,7 +267,7 @@ export const Layout: React.FC<IDashboardLayoutProps> = ({ children }) => {
           />
           {(currentFocus === "search" || currentFocus === "location") && (
             <input
-              className="mt-4 w-full rounded px-3 py-2"
+              className="mt-4 w-full rounded border px-3 py-2"
               value={location}
               onChange={handleLocationChange}
               name="location"
