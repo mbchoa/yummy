@@ -3,7 +3,7 @@ import { trpc } from "../utils/trpc";
 
 export const SearchWidget = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [location, setLocation] = useState("");
+  const [location, setLocation] = useState("Los Angeles, CA");
   const [currentFocus, setCurrentFocus] = useState<string | undefined>();
 
   const { data, refetch } = trpc.yelp.search.useQuery(
@@ -89,6 +89,7 @@ export const SearchWidget = () => {
         className="w-full rounded border px-3 py-2"
         value={searchTerm}
         onChange={handleSearchChange}
+        placeholder="In 'N Out"
         name="search"
       />
       {(currentFocus === "search" || currentFocus === "location") && (
