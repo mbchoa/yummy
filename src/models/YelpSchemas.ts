@@ -21,10 +21,44 @@ export const YelpBusinessSchema = z.object({
     country: z.string(),
     state: z.string(),
     display_address: z.array(z.string()),
+    cross_streets: z.string().optional(),
   }),
   phone: z.string(),
   display_phone: z.string(),
   distance: z.number(),
+  is_claimed: z.boolean().optional(),
+  price: z.enum(["$", "$$", "$$$", "$$$$"]),
+  photos: z.array(z.string()).optional(),
+  hours: z
+    .array(
+      z.object({
+        open: z.array(
+          z.object({
+            is_overnight: z.boolean(),
+            start: z.string(),
+            end: z.string(),
+            day: z.number(),
+          })
+        ),
+        hours_type: z.string(),
+        is_open_now: z.boolean(),
+      })
+    )
+    .optional(),
+  special_hours: z
+    .array(
+      z.object({
+        date: z.string(),
+        is_closed: z.boolean(),
+        start: z.null(),
+        end: z.null(),
+        is_overnight: z.null(),
+      })
+    )
+    .optional(),
+  messaging: z
+    .object({ url: z.string(), use_case_text: z.string() })
+    .optional(),
 });
 
 export const YelpBusinessSearchResponseSchema = z.object({
