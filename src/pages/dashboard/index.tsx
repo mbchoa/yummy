@@ -2,6 +2,7 @@ import { useRouter } from "next/router";
 import { useCallback } from "react";
 import { Layout } from "../../components/layout";
 import { LoggingIn } from "../../components/loggingIn";
+import { SearchWidget } from "../../components/searchWidget";
 import { useRequireAuth } from "../../hooks/useRequireAuth";
 import { trpc } from "../../utils/trpc";
 
@@ -44,5 +45,10 @@ export default function Dashboard() {
     return <LoggingIn />;
   }
 
-  return <Layout>{maybeRenderBody()}</Layout>;
+  return (
+    <Layout>
+      <SearchWidget />
+      {maybeRenderBody()}
+    </Layout>
+  );
 }
