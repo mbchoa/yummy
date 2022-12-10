@@ -7,10 +7,10 @@ import type {
   IYelpBusinessSearchResponseSchema,
 } from "../../../models/YelpSchemas";
 
-import { protectedProcedure, router } from "../trpc";
+import { publicProcedure, router } from "../trpc";
 
 export const yelpRouter = router({
-  search: protectedProcedure
+  search: publicProcedure
     .input(
       z.object({
         location: z.string(),
@@ -34,7 +34,7 @@ export const yelpRouter = router({
       ).json<IYelpBusinessSearchResponseSchema>();
       return camelCaseKeys<IYelpBusinessSearchResponseSchema>(response);
     }),
-  byId: protectedProcedure
+  byId: publicProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ input }) => {
       const response = await got(
@@ -48,7 +48,7 @@ export const yelpRouter = router({
       ).json<IYelpBusinessSchema>();
       return camelCaseKeys<IYelpBusinessSchema>(response);
     }),
-  byIds: protectedProcedure
+  byIds: publicProcedure
     .input(z.array(z.string()))
     .query(async ({ input: restaurantIds }) => {
       return Promise.all(
