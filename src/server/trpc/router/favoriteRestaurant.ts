@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { YelpRestaurantSchema } from "../../../models/YelpSchemas";
 import { protectedProcedure, router } from "../trpc";
 
 export const favoriteRestaurant = router({
@@ -8,22 +7,15 @@ export const favoriteRestaurant = router({
       where: {
         userId: ctx.session.user.id,
       },
-      include: {
-        restaurant: true,
-      },
     });
   }),
   add: protectedProcedure
-    .input(YelpRestaurantSchema)
+    .input(z.object({ restaurantId: z.string() }))
     .mutation(async ({ input, ctx }) => {
-      return ctx.prisma.restaurant.create({
+      return ctx.prisma.favoriteRestaurant.create({
         data: {
           ...input,
-          favoriteRestaurants: {
-            create: {
-              userId: ctx.session.user.id,
-            },
-          },
+          userId: ctx.session.user.id,
         },
       });
     }),
@@ -35,7 +27,6 @@ export const favoriteRestaurant = router({
           id: input.id,
         },
         include: {
-          restaurant: true,
           reviews: true,
         },
       });

@@ -2,7 +2,10 @@ import got from "got";
 import qs from "querystring";
 import { z } from "zod";
 import { camelCaseKeys } from "../../../lib/camelCaseKeys";
-import type { IYelpBusinessSearchResponseSchema } from "../../../models/YelpSchemas";
+import type {
+  IYelpBusinessSchema,
+  IYelpBusinessSearchResponseSchema,
+} from "../../../models/YelpSchemas";
 
 import { protectedProcedure, router } from "../trpc";
 
@@ -33,12 +36,34 @@ export const yelpRouter = router({
     }),
   byId: protectedProcedure
     .input(z.object({ id: z.string() }))
-    .query(({ input }) => {
-      return got(`https://api.yelp.com/v3/businesses/${input.id}`, {
-        headers: {
-          Authorization: `Bearer ${process.env.YELP_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-      }).json();
+    .query(async ({ input }) => {
+      const response = await got(
+        `https://api.yelp.com/v3/businesses/${input.id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.YELP_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+        }
+      ).json<IYelpBusinessSchema>();
+      return camelCaseKeys<IYelpBusinessSchema>(response);
+    }),
+  byIds: protectedProcedure
+    .input(z.array(z.string()))
+    .query(async ({ input: restaurantIds }) => {
+      return Promise.all(
+        restaurantIds.map((id) =>
+          got(`https://api.yelp.com/v3/businesses/${id}`, {
+            headers: {
+              Authorization: `Bearer ${process.env.YELP_API_KEY}`,
+              "Content-Type": "application/json",
+            },
+          }).json<IYelpBusinessSchema>()
+        )
+      ).then((jsonResponses) =>
+        jsonResponses.map((json) => {
+          return camelCaseKeys<IYelpBusinessSchema>(json);
+        })
+      );
     }),
 });

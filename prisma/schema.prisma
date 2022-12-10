@@ -61,29 +61,6 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-model Restaurant {
-  id                  String               @id @default(cuid())
-  alias               String
-  name                String
-  imageUrl            String
-  isClosed            Boolean
-  url                 String
-  reviewCount         Int
-  rating              Int
-  price               String
-  address1            String
-  address2            String?
-  address3            String?
-  city                String
-  zipCode             String
-  country             String
-  state               String
-  distance            Float
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @updatedAt
-  favoriteRestaurants FavoriteRestaurant[]
-}
-
 model FavoriteRestaurant {
   id           String       @id @default(cuid())
   userId       String
@@ -91,7 +68,6 @@ model FavoriteRestaurant {
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  restaurant   Restaurant   @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   reviews      FoodReview[]
 }
 
