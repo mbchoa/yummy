@@ -1,7 +1,9 @@
-import { UserIcon } from "@heroicons/react/24/outline";
+import { HeartIcon, UserIcon } from "@heroicons/react/24/outline";
+import classNames from "classnames";
 import Image from "next/image";
 import { useRouter } from "next/router";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
+import { Button } from "../../components/button";
 import { Layout } from "../../components/layout";
 import { trpc } from "../../utils/trpc";
 
@@ -26,8 +28,11 @@ export default function RestaurantById() {
       refetchOnWindowFocus: false,
     }
   );
+  const [isFavorite, setIsFavorite] = useState(false);
 
-  debugger;
+  const handleFavoriteClick = useCallback(() => {
+    setIsFavorite(!isFavorite);
+  }, [isFavorite]);
 
   const maybeRenderBody = useCallback(() => {
     if (restaurant === undefined || reviews === undefined) {
@@ -36,31 +41,33 @@ export default function RestaurantById() {
 
     return (
       <div className="space-y-4 p-4">
-        <div className="grid grid-cols-4 grid-rows-2 gap-4">
-          <header className="col-span-2 row-start-1 space-y-4">
+        <div className="grid grid-cols-4 grid-rows-2 gap-2">
+          <header className="col-span-full row-start-1 space-y-4">
             <h1 className="semi-bold text-2xl">{restaurant.name}</h1>
-            <address className="not-italic">
-              <p>{restaurant.location.address1}</p>
-              <p>
-                {restaurant.location.city}, {restaurant.location.state}{" "}
-                {restaurant.location.zipCode}
-              </p>
-            </address>
           </header>
-          <div className="relative col-span-2 col-start-3 row-span-full">
-            {restaurant.imageUrl === undefined ||
-            restaurant.imageUrl === null ? (
-              <div className="inset-0 bg-gray-500" />
-            ) : (
-              <Image
-                src={restaurant.imageUrl}
-                alt="Main image of the restaurant"
-                objectFit="contain"
-                objectPosition="top left"
-                width={170}
-                height={208}
+          <address className="col-span-2 row-start-2 not-italic">
+            <p>{restaurant.location.address1}</p>
+            <p>
+              {restaurant.location.city}, {restaurant.location.state}{" "}
+              {restaurant.location.zipCode}
+            </p>
+          </address>
+          <div className="col-span-2 col-start-4 row-start-2 flex h-full w-full items-center justify-end">
+            <Button
+              size="sm"
+              color="primary"
+              variant="ghost"
+              onClick={handleFavoriteClick}
+            >
+              <HeartIcon
+                className={classNames(
+                  "h-7 w-7",
+                  isFavorite
+                    ? "fill-red-400 stroke-red-400"
+                    : "fill-none stroke-gray-400"
+                )}
               />
-            )}
+            </Button>
           </div>
         </div>
         <hr className="bg-gray-500" />
@@ -92,7 +99,7 @@ export default function RestaurantById() {
         </ul>
       </div>
     );
-  }, [restaurant, reviews]);
+  }, [restaurant, reviews, isFavorite, handleFavoriteClick]);
 
   return <Layout>{maybeRenderBody()}</Layout>;
 }
