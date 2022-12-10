@@ -3,6 +3,7 @@ import qs from "querystring";
 import { z } from "zod";
 import { camelCaseKeys } from "../../../lib/camelCaseKeys";
 import type {
+  IYelpBusinessReviewsResponseSchema,
   IYelpBusinessSchema,
   IYelpBusinessSearchResponseSchema,
 } from "../../../models/YelpSchemas";
@@ -65,5 +66,19 @@ export const yelpRouter = router({
           return camelCaseKeys<IYelpBusinessSchema>(json);
         })
       );
+    }),
+  reviews: publicProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ input }) => {
+      const response = await got(
+        `https://api.yelp.com/v3/businesses/${input.id}/reviews?sort_by=newest`,
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.YELP_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+        }
+      ).json<IYelpBusinessReviewsResponseSchema>();
+      return camelCaseKeys<IYelpBusinessReviewsResponseSchema>(response);
     }),
 });

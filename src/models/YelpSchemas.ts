@@ -61,6 +61,8 @@ export const YelpBusinessSchema = z.object({
     .optional(),
 });
 
+export type IYelpBusinessSchema = z.infer<typeof YelpBusinessSchema>;
+
 export const YelpBusinessSearchResponseSchema = z.object({
   businesses: z.array(YelpBusinessSchema),
   total: z.number(),
@@ -73,25 +75,30 @@ export type IYelpBusinessSearchResponseSchema = z.infer<
   typeof YelpBusinessSearchResponseSchema
 >;
 
-export type IYelpBusinessSchema = z.infer<typeof YelpBusinessSchema>;
-
-// TODO deprecate this in favor of YelpBusinessSchema
-export const YelpRestaurantSchema = z.object({
+export const YelpBusinessReviewSchema = z.object({
   id: z.string(),
-  alias: z.string(),
-  name: z.string(),
-  imageUrl: z.string(),
-  isClosed: z.boolean(),
   url: z.string(),
-  reviewCount: z.number(),
-  rating: z.number(),
-  price: z.string(),
-  address1: z.string(),
-  address2: z.string().optional(),
-  address3: z.string().optional(),
-  city: z.string(),
-  zipCode: z.string(),
-  country: z.string(),
-  state: z.string(),
-  distance: z.number(),
+  text: z.string(),
+  rating: z.number().min(1).max(5),
+  time_created: z.string(),
+  user: z.object({
+    id: z.string(),
+    profile_url: z.string(),
+    image_url: z.string(),
+    name: z.string(),
+  }),
 });
+
+export type IYelpBusinessReviewSchema = z.infer<
+  typeof YelpBusinessReviewSchema
+>;
+
+export const YelpBusinessReviewsResponseSchema = z.object({
+  reviews: z.array(YelpBusinessReviewSchema),
+  total: z.number(),
+  possible_languages: z.array(z.string()),
+});
+
+export type IYelpBusinessReviewsResponseSchema = z.infer<
+  typeof YelpBusinessReviewsResponseSchema
+>;
