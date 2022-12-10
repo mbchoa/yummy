@@ -10,9 +10,17 @@ export default function Dashboard() {
   const router = useRouter();
   const { session, loading } = useRequireAuth();
   const { data: favoriteRestaurants } = trpc.favoriteRestaurant.all.useQuery();
+  const { data: restaurants } = trpc.yelp.byIds.useQuery(
+    (favoriteRestaurants ?? []).map(
+      (favoriteRestaurant) => favoriteRestaurant.id
+    ),
+    {
+      enabled: favoriteRestaurants !== undefined,
+    }
+  );
 
   const maybeRenderBody = useCallback(() => {
-    if (favoriteRestaurants === undefined) {
+    if (favoriteRestaurants === undefined || restaurants === undefined) {
       return <p>Loading...</p>;
     }
 
@@ -24,17 +32,16 @@ export default function Dashboard() {
 
     return (
       <ul>
-        {favoriteRestaurants.map((favoriteRestaurant) => {
-          const { id, restaurant } = favoriteRestaurant;
+        {restaurants.map((restaurant) => {
           return (
-            <li key={id}>
+            <li key={restaurant.id}>
               <p>{restaurant.name}</p>
             </li>
           );
         })}
       </ul>
     );
-  }, [favoriteRestaurants]);
+  }, [restaurants, favoriteRestaurants]);
 
   if (
     loading === true ||

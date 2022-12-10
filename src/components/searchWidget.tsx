@@ -41,7 +41,14 @@ export const SearchWidget = () => {
         {data.businesses.map((business) => {
           return (
             <li key={business.id}>
-              <Link href={`/dashboard/${business.id}`}>{business.name}</Link>
+              <Link
+                href={{
+                  pathname: "/restaurant/[restaurantId]",
+                  query: { restaurantId: business.id },
+                }}
+              >
+                {business.name}
+              </Link>
             </li>
           );
         })}
