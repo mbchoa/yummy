@@ -95,32 +95,42 @@ export default function RestaurantById() {
           </div>
         </div>
         <hr className="bg-gray-500" />
-        <ul className="space-y-6">
-          {reviews.reviews.map((review) => (
-            <li key={review.id} className="space-y-2">
-              <div className="flex items-center space-x-2 rounded-full">
-                <div className="relative h-12 w-12 overflow-hidden rounded-full">
-                  {review.user.imageUrl === undefined ||
-                  review.user.imageUrl === null ? (
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-slate-600">
-                      <UserIcon className="block h-6 w-6" aria-hidden />
+        <div className="space-y-8">
+          {isFavorite && (
+            <section className="space-y-4">
+              <h2 className="semi-bold text-xl">Favorite Foods</h2>
+            </section>
+          )}
+          <section className="space-y-4">
+            <h2 className="semi-bold text-xl">Reviews</h2>
+            <ul className="space-y-6">
+              {reviews.reviews.map((review) => (
+                <li key={review.id} className="space-y-2">
+                  <div className="flex items-center space-x-2 rounded-full">
+                    <div className="relative h-12 w-12 overflow-hidden rounded-full">
+                      {review.user.imageUrl === undefined ||
+                      review.user.imageUrl === null ? (
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-slate-600">
+                          <UserIcon className="block h-6 w-6" aria-hidden />
+                        </div>
+                      ) : (
+                        <Image
+                          src={review.user.imageUrl}
+                          alt={review.user.name}
+                          fill
+                          className="relative"
+                          objectFit="cover"
+                        />
+                      )}
                     </div>
-                  ) : (
-                    <Image
-                      src={review.user.imageUrl}
-                      alt={review.user.name}
-                      fill
-                      className="relative"
-                      objectFit="cover"
-                    />
-                  )}
-                </div>
-                <p className="semi-bold">{review.user.name}</p>
-              </div>
-              <p>{review.text}</p>
-            </li>
-          ))}
-        </ul>
+                    <p className="semi-bold">{review.user.name}</p>
+                  </div>
+                  <p>{review.text}</p>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </div>
       </div>
     );
   }, [restaurant, reviews, isFavorite, handleFavoriteClick]);
