@@ -11,8 +11,7 @@ declare module "nextjs-routes" {
     | StaticRoute<"/api/trpc/playground">
     | StaticRoute<"/dashboard">
     | DynamicRoute<"/dashboard/restaurant/[restaurantId]", { "restaurantId": string }>
-    | StaticRoute<"/">
-    | DynamicRoute<"/restaurant/[restaurantId]", { "restaurantId": string }>;
+    | StaticRoute<"/">;
 
   interface StaticRoute<Pathname> {
     pathname: Pathname;

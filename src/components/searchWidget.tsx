@@ -43,7 +43,7 @@ export const SearchWidget = () => {
             <li key={business.id}>
               <Link
                 href={{
-                  pathname: "/restaurant/[restaurantId]",
+                  pathname: "/dashboard/restaurant/[restaurantId]",
                   query: { restaurantId: business.id },
                 }}
               >

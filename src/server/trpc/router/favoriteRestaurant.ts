@@ -10,18 +10,27 @@ export const favoriteRestaurant = router({
     });
   }),
   add: protectedProcedure
-    .input(z.object({ restaurantId: z.string() }))
-    .mutation(async ({ input, ctx }) => {
+    .input(z.object({ id: z.string() }))
+    .mutation(({ input, ctx }) => {
       return ctx.prisma.favoriteRestaurant.create({
         data: {
-          ...input,
+          id: input.id,
           userId: ctx.session.user.id,
+        },
+      });
+    }),
+  remove: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(({ input, ctx }) => {
+      return ctx.prisma.favoriteRestaurant.delete({
+        where: {
+          id: input.id,
         },
       });
     }),
   byId: protectedProcedure
     .input(z.object({ id: z.string() }))
-    .query(async ({ input, ctx }) => {
+    .query(({ input, ctx }) => {
       return ctx.prisma.favoriteRestaurant.findUniqueOrThrow({
         where: {
           id: input.id,
