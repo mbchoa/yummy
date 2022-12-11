@@ -31,7 +31,8 @@ export const SearchWidget = () => {
       data === undefined ||
       data.businesses.length === 0 ||
       searchTerm.length === 0 ||
-      location.length === 0
+      location.length === 0 ||
+      !isLocationInputEnabled
     ) {
       return null;
     }
@@ -54,7 +55,7 @@ export const SearchWidget = () => {
         })}
       </ul>
     );
-  }, [data, searchTerm, location]);
+  }, [data, searchTerm, location, isLocationInputEnabled]);
 
   const handleSearchChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {

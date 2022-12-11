@@ -2,12 +2,12 @@ import classNames from "classnames";
 import React from "react";
 
 interface ILinkRenderer {
-  (children: React.ReactNode): React.ReactNode;
+  (children: React.ReactNode, cx: string): React.ReactNode;
 }
 
 interface IButtonProps {
-  size: "sm" | "md" | "lg";
-  onClick: () => void;
+  size?: "sm" | "md" | "lg";
+  onClick?: () => void;
   children?: React.ReactNode;
   LeftIcon?: JSX.Element;
   RightIcon?: JSX.Element;
@@ -58,7 +58,7 @@ export const Button = ({
   return (
     <>
       {linkRenderer !== undefined ? (
-        linkRenderer(children)
+        linkRenderer(children, cx)
       ) : (
         <button className={cx} disabled={disabled} onClick={onClick}>
           {LeftIcon}

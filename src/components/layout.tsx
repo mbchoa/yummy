@@ -2,12 +2,7 @@ import { Disclosure, Menu, Transition } from "@headlessui/react";
 import {
   Bars3Icon,
   BellIcon,
-  CalendarIcon,
-  ChartBarIcon,
-  FolderIcon,
   HomeIcon,
-  InboxIcon,
-  UsersIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { signOut } from "next-auth/react";
@@ -20,12 +15,7 @@ interface IDashboardLayoutProps {
 }
 
 const navigation = [
-  { name: "Dashboard", icon: HomeIcon, href: "#", current: true },
-  { name: "Team", icon: UsersIcon, href: "#", current: false },
-  { name: "Projects", icon: FolderIcon, href: "#", current: false },
-  { name: "Calendar", icon: CalendarIcon, href: "#", current: false },
-  { name: "Documents", icon: InboxIcon, href: "#", current: false },
-  { name: "Reports", icon: ChartBarIcon, href: "#", current: false },
+  { name: "Dashboard", icon: HomeIcon, href: "/dashboard", current: true },
 ];
 
 function classNames(...classes: string[]) {
