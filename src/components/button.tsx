@@ -6,9 +6,11 @@ interface ILinkRenderer {
 }
 
 interface IButtonProps {
-  children: React.ReactNode;
   size: "sm" | "md" | "lg";
   onClick: () => void;
+  children?: React.ReactNode;
+  LeftIcon?: JSX.Element;
+  RightIcon?: JSX.Element;
   color?: "primary" | "secondary";
   variant?: "contained" | "outlined" | "ghost";
   disabled?: boolean;
@@ -19,6 +21,8 @@ export const Button = ({
   children,
   size = "md",
   onClick,
+  LeftIcon,
+  RightIcon,
   color = "primary",
   variant = "contained",
   disabled = false,
@@ -57,7 +61,9 @@ export const Button = ({
         linkRenderer(children)
       ) : (
         <button className={cx} disabled={disabled} onClick={onClick}>
+          {LeftIcon}
           {children}
+          {RightIcon}
         </button>
       )}
     </>
