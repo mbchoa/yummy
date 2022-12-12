@@ -26,6 +26,7 @@ export const foodReview = router({
           restaurantId: input.restaurantId,
           userId: ctx.session.user.id,
           name: input.name,
+          like: input.like,
         },
       });
     }),
@@ -43,6 +44,15 @@ export const foodReview = router({
         },
         data: {
           like: input.like,
+        },
+      });
+    }),
+  remove: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(({ input, ctx }) => {
+      return ctx.prisma.foodReview.delete({
+        where: {
+          id: input.id,
         },
       });
     }),
