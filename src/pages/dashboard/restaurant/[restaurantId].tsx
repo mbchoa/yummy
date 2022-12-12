@@ -1,8 +1,4 @@
-import {
-  HeartIcon,
-  PlusCircleIcon,
-  UserIcon,
-} from "@heroicons/react/24/outline";
+import { HeartIcon, UserIcon } from "@heroicons/react/24/outline";
 import classNames from "classnames";
 import Image from "next/image";
 import { useRouter } from "next/router";
@@ -10,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { AddReviewModal } from "../../../components/addReviewModal";
 import { Button } from "../../../components/button";
 import { Layout } from "../../../components/layout";
+import { FavoriteFoods } from "../../../components/modules/restaurantDetail/favoriteFoods";
 import { trpc } from "../../../utils/trpc";
 
 export default function RestaurantById() {
@@ -111,21 +108,10 @@ export default function RestaurantById() {
           <hr className="bg-gray-300" />
           <div className="space-y-8">
             {isFavorite && (
-              <section className="space-y-4">
-                <h2 className="semi-bold text-xl">Favorite Foods</h2>
-                <div className="flex w-full flex-col items-center justify-center space-y-2 rounded border border-gray-300 p-4">
-                  <Button
-                    size="sm"
-                    color="primary"
-                    variant="ghost"
-                    LeftIcon={
-                      <PlusCircleIcon className="h-8 w-8 stroke-gray-300" />
-                    }
-                    onClick={openModal}
-                  />
-                  <p className="text-sm">Add an item!</p>
-                </div>
-              </section>
+              <FavoriteFoods
+                openModal={openModal}
+                restaurantId={restaurantId}
+              />
             )}
             <section className="space-y-4">
               <h2 className="semi-bold text-xl">Reviews</h2>
