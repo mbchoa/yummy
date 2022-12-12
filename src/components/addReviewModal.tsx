@@ -1,16 +1,40 @@
 import { Dialog, Transition } from "@headlessui/react";
-import { Fragment } from "react";
+import React, { Fragment, useCallback, useState } from "react";
+import { trpc } from "../utils/trpc";
 import { Button } from "./button";
 
 interface IAddReviewModalProps {
   isOpen: boolean;
   closeModal: () => void;
+  restaurantId: string;
 }
 
 export const AddReviewModal = ({
   isOpen,
   closeModal,
+  restaurantId,
 }: IAddReviewModalProps) => {
+  const [name, setName] = useState("");
+  const { refetch } = trpc.foodReview.all.useQuery({ restaurantId });
+  const { mutateAsync: addFoodReview } = trpc.foodReview.add.useMutation();
+  const handleChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setName(event.target.value);
+    },
+    []
+  );
+
+  const handleAddFoodReview = useCallback(
+    async (event: React.MouseEvent<HTMLButtonElement>) => {
+      event.preventDefault();
+      await addFoodReview({ name, restaurantId });
+      await refetch();
+      setName("");
+      closeModal();
+    },
+    [addFoodReview, closeModal, name, refetch, restaurantId]
+  );
+
   return (
     <Transition appear show={isOpen} as={Fragment}>
       <Dialog as="div" className="relative z-10" onClose={closeModal}>
@@ -50,8 +74,10 @@ export const AddReviewModal = ({
                     className="flex-1 rounded text-sm"
                     name="itemName"
                     placeholder="Double Double Cheeseburger"
+                    value={name}
+                    onChange={handleChange}
                   />
-                  <Button>Add</Button>
+                  <Button onClick={handleAddFoodReview}>Add</Button>
                 </form>
               </Dialog.Panel>
             </Transition.Child>

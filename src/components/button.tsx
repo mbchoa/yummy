@@ -7,7 +7,7 @@ interface ILinkRenderer {
 
 interface IButtonProps {
   size?: "sm" | "md" | "lg";
-  onClick?: () => void;
+  onClick?: any; // TODO: some button handlers are async, some are not, need to figure out how to type this
   children?: React.ReactNode;
   LeftIcon?: JSX.Element;
   RightIcon?: JSX.Element;

@@ -144,7 +144,11 @@ export default function RestaurantById() {
             </section>
           </div>
         </div>
-        <AddReviewModal isOpen={isAddReviewModalOpen} closeModal={closeModal} />
+        <AddReviewModal
+          isOpen={isAddReviewModalOpen}
+          closeModal={closeModal}
+          restaurantId={restaurantId}
+        />
       </>
     );
   }, [

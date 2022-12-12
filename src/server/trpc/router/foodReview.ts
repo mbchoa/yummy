@@ -16,7 +16,10 @@ export const foodReview = router({
     .input(
       z.object({
         restaurantId: z.string(),
-        like: z.enum(["LIKE", "DISLIKE", "UNSELECTED"]),
+        like: z
+          .enum(["LIKE", "DISLIKE", "UNSELECTED"])
+          .optional()
+          .default("UNSELECTED"),
         name: z.string(),
       })
     )
