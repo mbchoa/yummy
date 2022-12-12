@@ -1,27 +1,16 @@
 import { type NextPage } from "next";
-import { signIn, signOut } from "next-auth/react";
+import { signIn, signOut, useSession } from "next-auth/react";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { LoggingIn } from "../components/loggingIn";
-import { useRequireAuth } from "../hooks/useRequireAuth";
 
 const Home: NextPage = () => {
   const router = useRouter();
-  const { session: sessionData, loading } = useRequireAuth();
+  const { data: session, status } = useSession();
 
   if (
-    loading === true ||
-    sessionData == null ||
-    sessionData.user == null ||
-    router.isReady === false
-  ) {
-    return <LoggingIn />;
-  }
-
-  if (
-    loading === false &&
-    sessionData !== null &&
-    sessionData.user !== null &&
+    status === "authenticated" &&
+    session !== null &&
+    session.user !== null &&
     router.isReady === true
   ) {
     router.push("/dashboard");
@@ -42,14 +31,14 @@ const Home: NextPage = () => {
           <div className="flex flex-col items-center gap-2">
             <div className="flex flex-col items-center justify-center gap-4">
               <p className="text-center text-2xl text-white">
-                {sessionData && (
-                  <span>Logged in as {sessionData.user.name}</span>
+                {session && session?.user && (
+                  <span>Logged in as {session.user.name}</span>
                 )}
               </p>
               <button
                 className="rounded-full bg-white/10 px-10 py-3 font-semibold text-white no-underline transition hover:bg-white/20"
                 onClick={
-                  sessionData
+                  session
                     ? () => signOut()
                     : () =>
                         signIn("auth0", {
