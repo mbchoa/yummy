@@ -131,6 +131,11 @@ export const FavoriteFoods = ({
             </div>
           </li>
         ))}
+        <li className="mt-2">
+          <Button size="sm" onClick={openModal}>
+            Add
+          </Button>
+        </li>
       </ul>
     );
   }, [
