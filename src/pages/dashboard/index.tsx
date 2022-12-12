@@ -1,76 +1,80 @@
-import { useRouter } from "next/router";
+import { useSession } from "next-auth/react";
 import { useCallback } from "react";
 import { Button } from "../../components/button";
 import { Layout } from "../../components/layout";
-import { LoggingIn } from "../../components/loggingIn";
 import { NextLinkRenderer } from "../../components/nextLinkRenderer";
 import { SearchWidget } from "../../components/searchWidget";
-import { useRequireAuth } from "../../hooks/useRequireAuth";
 import { trpc } from "../../utils/trpc";
 
 export default function Dashboard() {
-  const router = useRouter();
-  const { session, loading } = useRequireAuth();
-  const { data: favoriteRestaurants } = trpc.favoriteRestaurant.all.useQuery();
-  const { data: restaurants } = trpc.yelp.byIds.useQuery(
-    (favoriteRestaurants ?? []).map(
-      (favoriteRestaurant) => favoriteRestaurant.id
-    ),
-    {
-      enabled: favoriteRestaurants !== undefined,
-    }
-  );
+  const { data: session } = useSession();
+  const { data: favoriteRestaurants, isLoading: isLoadingFavoriteRestaurants } =
+    trpc.favoriteRestaurant.all.useQuery(undefined, {
+      enabled: session !== undefined,
+    });
+  const { data: restaurants, isLoading: isLoadingYelpRestaurants } =
+    trpc.yelp.byIds.useQuery(
+      (favoriteRestaurants ?? []).map(
+        (favoriteRestaurant) => favoriteRestaurant.id
+      ),
+      {
+        enabled: favoriteRestaurants !== undefined,
+      }
+    );
 
-  const maybeRenderBody = useCallback(() => {
-    if (favoriteRestaurants === undefined || restaurants === undefined) {
-      return <p>Loading...</p>;
-    }
-
-    if (favoriteRestaurants.length === 0) {
+  const maybeRenderFavoriteRestaurants = useCallback(() => {
+    if (isLoadingFavoriteRestaurants || isLoadingYelpRestaurants) {
       return (
-        <p className="w-full p-4">You have no favorite restaurants yet.</p>
+        <ul className="space-y-2">
+          {[1, 2, 3].map((key) => (
+            <li
+              key={key}
+              className="h-9 w-full animate-pulse rounded bg-gray-200"
+            />
+          ))}
+        </ul>
       );
     }
 
-    return (
-      <section className="space-y-4 px-4">
-        <h1 className="text-2xl">Favorites</h1>
-        <ul className="space-y-2">
-          {restaurants.map((restaurant) => {
-            return (
-              <li key={restaurant.id}>
-                <Button
-                  variant="ghost"
-                  linkRenderer={NextLinkRenderer({
-                    href: {
-                      pathname: `/dashboard/restaurant/[restaurantId]`,
-                      query: { restaurantId: restaurant.id },
-                    },
-                  })}
-                >
-                  {restaurant.name}
-                </Button>
-              </li>
-            );
-          })}
-        </ul>
-      </section>
-    );
-  }, [restaurants, favoriteRestaurants]);
+    if (favoriteRestaurants === undefined || restaurants === undefined) {
+      return <p className="px-4">Unable to fetch favorite restaurants.</p>;
+    }
 
-  if (
-    loading === true ||
-    session === null ||
-    session.user === null ||
-    router.isReady === false
-  ) {
-    return <LoggingIn />;
-  }
+    return (
+      <ul className="space-y-2">
+        {restaurants.map((restaurant) => {
+          return (
+            <li key={restaurant.id}>
+              <Button
+                variant="ghost"
+                linkRenderer={NextLinkRenderer({
+                  href: {
+                    pathname: `/dashboard/restaurant/[restaurantId]`,
+                    query: { restaurantId: restaurant.id },
+                  },
+                })}
+              >
+                {restaurant.name}
+              </Button>
+            </li>
+          );
+        })}
+      </ul>
+    );
+  }, [
+    isLoadingFavoriteRestaurants,
+    isLoadingYelpRestaurants,
+    favoriteRestaurants,
+    restaurants,
+  ]);
 
   return (
     <Layout>
       <SearchWidget />
-      {maybeRenderBody()}
+      <section className="space-y-4 px-4">
+        <h1 className="text-2xl">Favorites</h1>
+        {maybeRenderFavoriteRestaurants()}
+      </section>
     </Layout>
   );
 }
