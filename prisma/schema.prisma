@@ -74,6 +74,7 @@ model FoodReview {
   id           String             @id @default(cuid())
   userId       String
   restaurantId String
+  name         String
   like         Like               @default(UNSELECTED)
   review       String?
   createdAt    DateTime           @default(now())
