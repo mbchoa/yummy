@@ -74,10 +74,16 @@ model FoodReview {
   id           String             @id @default(cuid())
   userId       String
   restaurantId String
-  like         Boolean
-  review       String
+  like         Like               @default(UNSELECTED)
+  review       String?
   createdAt    DateTime           @default(now())
   updatedAt    DateTime           @updatedAt
   user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   restaurant   FavoriteRestaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+}
+
+enum Like {
+  LIKE
+  DISLIKE
+  UNSELECTED
 }
