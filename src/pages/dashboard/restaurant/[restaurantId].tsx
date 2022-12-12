@@ -72,7 +72,7 @@ export default function RestaurantById() {
 
   const maybeRenderBody = useCallback(() => {
     if (restaurant === undefined || reviews === undefined) {
-      return <p>Loading...</p>;
+      return <p className="px-4">Loading...</p>;
     }
 
     return (
