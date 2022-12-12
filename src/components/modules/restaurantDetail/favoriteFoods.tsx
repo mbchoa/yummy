@@ -4,6 +4,7 @@ import {
   PlusCircleIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
+import classNames from "classnames";
 import { useCallback } from "react";
 import { trpc } from "../../../utils/trpc";
 import { Button } from "../../button";
@@ -64,15 +65,33 @@ export const FavoriteFoods = ({
             <div className="flex items-center space-x-2">
               <Button
                 size="sm"
-                LeftIcon={<HandThumbDownIcon className="h-5 w-5" />}
+                variant="ghost"
+                LeftIcon={
+                  <HandThumbDownIcon
+                    className={classNames(
+                      "h-5 w-5",
+                      foodReview.like === "DISLIKE" &&
+                        "fill-red-400 stroke-red-400"
+                    )}
+                  />
+                }
               />
               <Button
                 size="sm"
-                LeftIcon={<HandThumbUpIcon className="h-5 w-5" />}
+                variant="ghost"
+                LeftIcon={
+                  <HandThumbUpIcon
+                    className={classNames(
+                      "h-5 w-5",
+                      foodReview.like === "LIKE" &&
+                        "fill-green-400 stroke-green-400"
+                    )}
+                  />
+                }
               />
               <Button
                 size="sm"
-                LeftIcon={<TrashIcon className="h-4 w-4" />}
+                LeftIcon={<TrashIcon className="h-4 w-4 stroke-red-400" />}
                 variant="ghost"
               />
             </div>
