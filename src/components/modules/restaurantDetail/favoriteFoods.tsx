@@ -27,11 +27,42 @@ export const FavoriteFoods = ({
         enabled: restaurantId !== undefined,
       }
     );
-  const { data: foodReviews, isLoading: isFoodReviewsLoading } =
-    trpc.foodReview.all.useQuery(
-      { restaurantId },
-      { enabled: favoriteRestaurant !== undefined }
-    );
+  const {
+    data: foodReviews,
+    isLoading: isFoodReviewsLoading,
+    refetch: refetchFoodReviews,
+  } = trpc.foodReview.all.useQuery(
+    { restaurantId },
+    { enabled: favoriteRestaurant !== undefined }
+  );
+  const { mutateAsync: updateFoodReview } =
+    trpc.foodReview.update.useMutation();
+  const { mutateAsync: removeFoodReview } =
+    trpc.foodReview.remove.useMutation();
+
+  const handleDislikeFoodReview = useCallback(
+    (foodReviewId: string) => async () => {
+      await updateFoodReview({ id: foodReviewId, like: "DISLIKE" });
+      await refetchFoodReviews();
+    },
+    [refetchFoodReviews, updateFoodReview]
+  );
+
+  const handleLikeFoodReview = useCallback(
+    (foodReviewId: string) => async () => {
+      await updateFoodReview({ id: foodReviewId, like: "LIKE" });
+      await refetchFoodReviews();
+    },
+    [refetchFoodReviews, updateFoodReview]
+  );
+
+  const handleRemoveFoodReview = useCallback(
+    (foodReviewId: string) => async () => {
+      await removeFoodReview({ id: foodReviewId });
+      await refetchFoodReviews();
+    },
+    [removeFoodReview, refetchFoodReviews]
+  );
 
   const maybeRenderBody = useCallback(() => {
     if (isFavoriteRestaurantLoading || isFoodReviewsLoading) {
@@ -75,6 +106,7 @@ export const FavoriteFoods = ({
                     )}
                   />
                 }
+                onClick={handleDislikeFoodReview(foodReview.id)}
               />
               <Button
                 size="sm"
@@ -88,11 +120,13 @@ export const FavoriteFoods = ({
                     )}
                   />
                 }
+                onClick={handleLikeFoodReview(foodReview.id)}
               />
               <Button
                 size="sm"
                 LeftIcon={<TrashIcon className="h-4 w-4 stroke-red-400" />}
                 variant="ghost"
+                onClick={handleRemoveFoodReview(foodReview.id)}
               />
             </div>
           </li>
@@ -102,6 +136,9 @@ export const FavoriteFoods = ({
   }, [
     favoriteRestaurant,
     foodReviews,
+    handleDislikeFoodReview,
+    handleLikeFoodReview,
+    handleRemoveFoodReview,
     isFavoriteRestaurantLoading,
     isFoodReviewsLoading,
     openModal,

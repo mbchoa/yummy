@@ -150,11 +150,12 @@ export default function RestaurantById() {
   }, [
     restaurant,
     reviews,
-    isFavorite,
     handleFavoriteClick,
+    isFavorite,
+    openModal,
+    restaurantId,
     isAddReviewModalOpen,
     closeModal,
-    openModal,
   ]);
 
   return <Layout>{maybeRenderBody()}</Layout>;
