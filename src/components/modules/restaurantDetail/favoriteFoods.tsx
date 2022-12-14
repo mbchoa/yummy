@@ -42,26 +42,30 @@ export const FavoriteFoods = ({
 
   const handleDislikeFoodReview = useCallback(
     (foodReviewId: string) => async () => {
-      await updateFoodReview({ id: foodReviewId, like: "DISLIKE" });
+      await updateFoodReview({
+        id: foodReviewId,
+        restaurantId,
+        like: "DISLIKE",
+      });
       await refetchFoodReviews();
     },
-    [refetchFoodReviews, updateFoodReview]
+    [refetchFoodReviews, updateFoodReview, restaurantId]
   );
 
   const handleLikeFoodReview = useCallback(
     (foodReviewId: string) => async () => {
-      await updateFoodReview({ id: foodReviewId, like: "LIKE" });
+      await updateFoodReview({ id: foodReviewId, restaurantId, like: "LIKE" });
       await refetchFoodReviews();
     },
-    [refetchFoodReviews, updateFoodReview]
+    [refetchFoodReviews, updateFoodReview, restaurantId]
   );
 
   const handleRemoveFoodReview = useCallback(
     (foodReviewId: string) => async () => {
-      await removeFoodReview({ id: foodReviewId });
+      await removeFoodReview({ id: foodReviewId, restaurantId });
       await refetchFoodReviews();
     },
-    [removeFoodReview, refetchFoodReviews]
+    [removeFoodReview, refetchFoodReviews, restaurantId]
   );
 
   const maybeRenderBody = useCallback(() => {
@@ -91,8 +95,11 @@ export const FavoriteFoods = ({
     return (
       <ul className="space-y-2">
         {foodReviews.map((foodReview) => (
-          <li key={foodReview.id} className="flex items-center justify-between">
-            <p>{foodReview.name}</p>
+          <li
+            key={foodReview.restaurantItemId}
+            className="flex items-center justify-between"
+          >
+            <p>{foodReview.restaurantItem.name}</p>
             <div className="flex items-center space-x-2">
               <Button
                 size="sm"
@@ -106,7 +113,7 @@ export const FavoriteFoods = ({
                     )}
                   />
                 }
-                onClick={handleDislikeFoodReview(foodReview.id)}
+                onClick={handleDislikeFoodReview(foodReview.restaurantItem.id)}
               />
               <Button
                 size="sm"
@@ -120,13 +127,13 @@ export const FavoriteFoods = ({
                     )}
                   />
                 }
-                onClick={handleLikeFoodReview(foodReview.id)}
+                onClick={handleLikeFoodReview(foodReview.restaurantItem.id)}
               />
               <Button
                 size="sm"
                 LeftIcon={<TrashIcon className="h-4 w-4 stroke-red-400" />}
                 variant="ghost"
-                onClick={handleRemoveFoodReview(foodReview.id)}
+                onClick={handleRemoveFoodReview(foodReview.restaurantItem.id)}
               />
             </div>
           </li>

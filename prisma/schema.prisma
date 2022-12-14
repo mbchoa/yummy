@@ -42,15 +42,15 @@ model Session {
 }
 
 model User {
-  id                  String               @id @default(cuid())
-  name                String?
-  email               String?              @unique
-  emailVerified       DateTime?
-  image               String?
-  accounts            Account[]
-  sessions            Session[]
-  favoriteRestaurants FavoriteRestaurant[]
-  reviews             FoodReview[]
+  id                 String                 @id @default(cuid())
+  name               String?
+  email              String?                @unique
+  emailVerified      DateTime?
+  image              String?
+  accounts           Account[]
+  sessions           Session[]
+  reviews            RestaurantItemReview[]
+  FavoriteRestaurant FavoriteRestaurant[]
 }
 
 model VerificationToken {
@@ -62,25 +62,35 @@ model VerificationToken {
 }
 
 model FavoriteRestaurant {
-  id        String       @id
-  userId    String
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
-  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  reviews   FoodReview[]
+  id              String                 @id
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+  userId          String
+  user            User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  restaurantItems RestaurantItemReview[]
 }
 
-model FoodReview {
-  id           String             @id @default(cuid())
-  userId       String
-  restaurantId String
-  name         String
-  like         Like               @default(UNSELECTED)
-  review       String?
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt
-  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  restaurant   FavoriteRestaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+model RestaurantItem {
+  id          String                 @id @default(cuid())
+  name        String
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+  restaurants RestaurantItemReview[]
+}
+
+model RestaurantItemReview {
+  favoriteRestaurantId String
+  restaurantItemId     String
+  reviewedById         String
+  like                 Like               @default(UNSELECTED)
+  review               String?
+  favoriteRestaurant   FavoriteRestaurant @relation(fields: [favoriteRestaurantId], references: [id], onDelete: Cascade)
+  restaurantItem       RestaurantItem     @relation(fields: [restaurantItemId], references: [id], onDelete: Cascade)
+  reviewedBy           User               @relation(fields: [reviewedById], references: [id])
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  @@id([favoriteRestaurantId, restaurantItemId, reviewedById])
 }
 
 enum Like {

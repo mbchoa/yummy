@@ -15,7 +15,11 @@ export const favoriteRestaurant = router({
       return ctx.prisma.favoriteRestaurant.create({
         data: {
           id: input.id,
-          userId: ctx.session.user.id,
+          user: {
+            connect: {
+              id: ctx.session.user.id,
+            },
+          },
         },
       });
     }),
@@ -34,9 +38,6 @@ export const favoriteRestaurant = router({
       return ctx.prisma.favoriteRestaurant.findUniqueOrThrow({
         where: {
           id: input.id,
-        },
-        include: {
-          reviews: true,
         },
       });
     }),
