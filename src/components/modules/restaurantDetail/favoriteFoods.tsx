@@ -44,28 +44,27 @@ export const FavoriteFoods = ({
     (foodReviewId: string) => async () => {
       await updateFoodReview({
         id: foodReviewId,
-        restaurantId,
         like: "DISLIKE",
       });
       await refetchFoodReviews();
     },
-    [refetchFoodReviews, updateFoodReview, restaurantId]
+    [refetchFoodReviews, updateFoodReview]
   );
 
   const handleLikeFoodReview = useCallback(
     (foodReviewId: string) => async () => {
-      await updateFoodReview({ id: foodReviewId, restaurantId, like: "LIKE" });
+      await updateFoodReview({ id: foodReviewId, like: "LIKE" });
       await refetchFoodReviews();
     },
-    [refetchFoodReviews, updateFoodReview, restaurantId]
+    [refetchFoodReviews, updateFoodReview]
   );
 
   const handleRemoveFoodReview = useCallback(
     (foodReviewId: string) => async () => {
-      await removeFoodReview({ id: foodReviewId, restaurantId });
+      await removeFoodReview({ id: foodReviewId });
       await refetchFoodReviews();
     },
-    [removeFoodReview, refetchFoodReviews, restaurantId]
+    [removeFoodReview, refetchFoodReviews]
   );
 
   const maybeRenderBody = useCallback(() => {
@@ -113,7 +112,7 @@ export const FavoriteFoods = ({
                     )}
                   />
                 }
-                onClick={handleDislikeFoodReview(foodReview.restaurantItem.id)}
+                onClick={handleDislikeFoodReview(foodReview.id)}
               />
               <Button
                 size="sm"
@@ -127,13 +126,13 @@ export const FavoriteFoods = ({
                     )}
                   />
                 }
-                onClick={handleLikeFoodReview(foodReview.restaurantItem.id)}
+                onClick={handleLikeFoodReview(foodReview.id)}
               />
               <Button
                 size="sm"
                 LeftIcon={<TrashIcon className="h-4 w-4 stroke-red-400" />}
                 variant="ghost"
-                onClick={handleRemoveFoodReview(foodReview.restaurantItem.id)}
+                onClick={handleRemoveFoodReview(foodReview.id)}
               />
             </div>
           </li>

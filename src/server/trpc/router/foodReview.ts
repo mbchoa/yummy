@@ -7,11 +7,16 @@ export const foodReview = router({
     .query(({ ctx, input }) => {
       return ctx.prisma.restaurantItemReview.findMany({
         where: {
-          favoriteRestaurantId: input.restaurantId,
           reviewedById: ctx.session.user.id,
+          restaurantItem: {
+            restaurantId: input.restaurantId,
+          },
         },
         include: {
           restaurantItem: true,
+        },
+        orderBy: {
+          createdAt: "desc",
         },
       });
     }),
@@ -27,25 +32,26 @@ export const foodReview = router({
       })
     )
     .mutation(({ input, ctx }) => {
-      return ctx.prisma.restaurantItem.create({
-        data: {
+      return ctx.prisma.restaurantItem.upsert({
+        where: {
           name: input.name,
-          restaurants: {
-            create: [
-              {
-                like: input.like,
-                reviewedBy: {
-                  connect: {
-                    id: ctx.session.user.id,
-                  },
-                },
-                favoriteRestaurant: {
-                  connect: {
-                    id: input.restaurantId,
-                  },
+        },
+        update: {
+          name: input.name,
+        },
+        create: {
+          name: input.name,
+          restaurantId: input.restaurantId,
+          userId: ctx.session.user.id,
+          restaurantItemReview: {
+            create: {
+              like: input.like,
+              reviewedBy: {
+                connect: {
+                  id: ctx.session.user.id,
                 },
               },
-            ],
+            },
           },
         },
       });
@@ -54,18 +60,13 @@ export const foodReview = router({
     .input(
       z.object({
         id: z.string(),
-        restaurantId: z.string(),
         like: z.enum(["LIKE", "DISLIKE", "UNSELECTED"]),
       })
     )
     .mutation(({ input, ctx }) => {
       return ctx.prisma.restaurantItemReview.update({
         where: {
-          favoriteRestaurantId_restaurantItemId_reviewedById: {
-            favoriteRestaurantId: input.restaurantId,
-            restaurantItemId: input.id,
-            reviewedById: ctx.session.user.id,
-          },
+          id: input.id,
         },
         data: {
           like: input.like,
@@ -73,15 +74,11 @@ export const foodReview = router({
       });
     }),
   remove: protectedProcedure
-    .input(z.object({ id: z.string(), restaurantId: z.string() }))
+    .input(z.object({ id: z.string() }))
     .mutation(({ input, ctx }) => {
       return ctx.prisma.restaurantItemReview.delete({
         where: {
-          favoriteRestaurantId_restaurantItemId_reviewedById: {
-            favoriteRestaurantId: input.restaurantId,
-            restaurantItemId: input.id,
-            reviewedById: ctx.session.user.id,
-          },
+          id: input.id,
         },
       });
     }),

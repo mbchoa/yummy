@@ -1,4 +1,5 @@
 import { Dialog, Transition } from "@headlessui/react";
+import { Like } from "@prisma/client";
 import React, { Fragment, useCallback, useState } from "react";
 import { trpc } from "../utils/trpc";
 import { Button } from "./button";
@@ -27,7 +28,7 @@ export const AddReviewModal = ({
   const handleAddFoodReview = useCallback(
     async (event: React.MouseEvent<HTMLButtonElement>) => {
       event.preventDefault();
-      await addFoodReview({ name, restaurantId });
+      await addFoodReview({ name, restaurantId, like: Like.LIKE });
       await refetch();
       setName("");
       closeModal();

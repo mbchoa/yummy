@@ -15,7 +15,7 @@ export default function Dashboard() {
   const { data: restaurants, isLoading: isLoadingYelpRestaurants } =
     trpc.yelp.byIds.useQuery(
       (favoriteRestaurants ?? []).map(
-        (favoriteRestaurant) => favoriteRestaurant.id
+        (favoriteRestaurant) => favoriteRestaurant.restaurantId
       ),
       {
         enabled: favoriteRestaurants !== undefined,
