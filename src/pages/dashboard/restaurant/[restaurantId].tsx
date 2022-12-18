@@ -34,7 +34,7 @@ export default function RestaurantById() {
       id: restaurantId,
     },
     {
-      enabled: restaurantId !== undefined,
+      enabled: restaurant !== undefined,
     }
   );
   const { data: reviews } = trpc.yelp.reviews.useQuery(
@@ -42,7 +42,7 @@ export default function RestaurantById() {
       id: restaurantId,
     },
     {
-      enabled: restaurantId !== undefined,
+      enabled: restaurant !== undefined,
       refetchOnWindowFocus: false,
     }
   );
