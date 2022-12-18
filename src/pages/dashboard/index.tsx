@@ -26,7 +26,7 @@ export default function Dashboard() {
     if (isLoadingFavoriteRestaurants || isLoadingYelpRestaurants) {
       return (
         <ul className="space-y-2">
-          {[1, 2, 3].map((key) => (
+          {[1, 2, 3, 4, 5].map((key) => (
             <li
               key={key}
               className="h-9 w-full animate-pulse rounded bg-gray-200"

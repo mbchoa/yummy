@@ -32,25 +32,30 @@ export const foodReview = router({
       })
     )
     .mutation(({ input, ctx }) => {
-      return ctx.prisma.restaurantItem.upsert({
-        where: {
-          name: input.name,
-        },
-        update: {
-          name: input.name,
-        },
-        create: {
-          name: input.name,
-          restaurantId: input.restaurantId,
-          userId: ctx.session.user.id,
-          restaurantItemReview: {
-            create: {
-              like: input.like,
-              reviewedBy: {
-                connect: {
-                  id: ctx.session.user.id,
+      return ctx.prisma.restaurantItemReview.create({
+        data: {
+          like: input.like,
+          restaurantItem: {
+            connectOrCreate: {
+              where: {
+                name: input.name,
+              },
+              create: {
+                name: input.name,
+                restaurant: {
+                  connect: {
+                    restaurantId_userId: {
+                      restaurantId: input.restaurantId,
+                      userId: ctx.session.user.id,
+                    },
+                  },
                 },
               },
+            },
+          },
+          reviewedBy: {
+            connect: {
+              id: ctx.session.user.id,
             },
           },
         },

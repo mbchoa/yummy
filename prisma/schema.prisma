@@ -88,11 +88,11 @@ model RestaurantItemReview {
   id               String         @id @default(cuid())
   like             Like           @default(UNSELECTED)
   review           String?
-  reviewedById     String
+  reviewedById     String?
   restaurantItemId String
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
-  reviewedBy       User           @relation(fields: [reviewedById], references: [id])
+  reviewedBy       User?          @relation(fields: [reviewedById], references: [id], onDelete: SetNull)
   restaurantItem   RestaurantItem @relation(fields: [restaurantItemId], references: [id], onDelete: Cascade)
 }
 

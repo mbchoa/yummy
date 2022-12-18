@@ -5,9 +5,7 @@ export const favoriteRestaurant = router({
   all: protectedProcedure.query(({ ctx }) => {
     return ctx.prisma.favoriteRestaurant.findMany({
       where: {
-        user: {
-          id: ctx.session.user.id,
-        },
+        userId: ctx.session.user.id,
       },
     });
   }),
