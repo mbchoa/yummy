@@ -1,5 +1,5 @@
 import { useSession } from "next-auth/react";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { Button } from "../../components/button";
 import { Layout } from "../../components/layout";
 import { NextLinkRenderer } from "../../components/nextLinkRenderer";
@@ -22,6 +22,25 @@ export default function Dashboard() {
       }
     );
 
+  const restaurantsGroupedByCity = useMemo(() => {
+    if (restaurants === undefined) {
+      return undefined;
+    }
+
+    const restaurantsGroupedByCity: Record<string, typeof restaurants> = {};
+    restaurants.forEach((restaurant) => {
+      const city = restaurant.location.city;
+      const restaurantsInCity = restaurantsGroupedByCity[city];
+      if (restaurantsInCity === undefined) {
+        restaurantsGroupedByCity[city] = [restaurant];
+      } else {
+        restaurantsGroupedByCity[city] = [...restaurantsInCity, restaurant];
+      }
+    });
+
+    return restaurantsGroupedByCity;
+  }, [restaurants]);
+
   const maybeRenderFavoriteRestaurants = useCallback(() => {
     if (isLoadingFavoriteRestaurants || isLoadingYelpRestaurants) {
       return (
@@ -36,45 +55,59 @@ export default function Dashboard() {
       );
     }
 
-    if (favoriteRestaurants === undefined || restaurants === undefined) {
+    if (
+      favoriteRestaurants === undefined ||
+      restaurantsGroupedByCity === undefined
+    ) {
       return <p className="px-4">Unable to fetch favorite restaurants.</p>;
     }
 
     return (
-      <ul className="space-y-2">
-        {restaurants.map((restaurant) => {
+      <div className="space-y-6">
+        {Object.keys(restaurantsGroupedByCity).map((city) => {
           return (
-            <li key={restaurant.id}>
-              <Button
-                variant="ghost"
-                linkRenderer={NextLinkRenderer({
-                  href: {
-                    pathname: `/dashboard/restaurant/[restaurantId]`,
-                    query: { restaurantId: restaurant.id },
-                  },
+            <section className="space-y-2" key={city}>
+              <h2 className="text-xl">{city}</h2>
+              <ul className="space-y-2">
+                {(restaurantsGroupedByCity?.[city] ?? []).map((restaurant) => {
+                  return (
+                    <li key={restaurant.id}>
+                      <Button
+                        variant="ghost"
+                        linkRenderer={NextLinkRenderer({
+                          href: {
+                            pathname: `/dashboard/restaurant/[restaurantId]`,
+                            query: { restaurantId: restaurant.id },
+                          },
+                        })}
+                      >
+                        {restaurant.name}
+                      </Button>
+                    </li>
+                  );
                 })}
-              >
-                {restaurant.name}
-              </Button>
-            </li>
+              </ul>
+            </section>
           );
         })}
-      </ul>
+      </div>
     );
   }, [
     isLoadingFavoriteRestaurants,
     isLoadingYelpRestaurants,
     favoriteRestaurants,
-    restaurants,
+    restaurantsGroupedByCity,
   ]);
 
   return (
     <Layout>
       <SearchWidget />
-      <section className="space-y-4 px-4">
-        <h1 className="text-2xl">Favorites</h1>
-        {maybeRenderFavoriteRestaurants()}
-      </section>
+      <div className="space-y-6">
+        <section className="space-y-4 px-4">
+          <h1 className="text-2xl font-semibold">Favorites</h1>
+          {maybeRenderFavoriteRestaurants()}
+        </section>
+      </div>
     </Layout>
   );
 }
