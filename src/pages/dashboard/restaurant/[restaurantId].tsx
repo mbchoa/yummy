@@ -1,12 +1,12 @@
-import { HeartIcon, UserIcon } from "@heroicons/react/24/outline";
+import { HeartIcon } from "@heroicons/react/24/outline";
 import classNames from "classnames";
-import Image from "next/image";
 import { useRouter } from "next/router";
 import { useCallback, useEffect, useState } from "react";
 import { AddReviewModal } from "../../../components/addReviewModal";
 import { Button } from "../../../components/button";
 import { Layout } from "../../../components/layout";
 import { FavoriteFoods } from "../../../components/modules/restaurantDetail/favoriteFoods";
+import { YelpReviews } from "../../../components/modules/restaurantDetail/yelpReviews";
 import { trpc } from "../../../utils/trpc";
 
 export default function RestaurantById() {
@@ -37,15 +37,7 @@ export default function RestaurantById() {
       enabled: restaurant !== undefined,
     }
   );
-  const { data: reviews } = trpc.yelp.reviews.useQuery(
-    {
-      id: restaurantId,
-    },
-    {
-      enabled: restaurant !== undefined,
-      refetchOnWindowFocus: false,
-    }
-  );
+
   const { mutateAsync: addRestaurant } =
     trpc.favoriteRestaurant.add.useMutation();
   const { mutateAsync: removeRestaurant } =
@@ -68,7 +60,7 @@ export default function RestaurantById() {
   }, [addRestaurant, isFavorite, removeRestaurant, restaurantId]);
 
   const maybeRenderBody = useCallback(() => {
-    if (restaurant === undefined || reviews === undefined) {
+    if (restaurant === undefined) {
       return <p className="px-4">Loading...</p>;
     }
 
@@ -113,35 +105,7 @@ export default function RestaurantById() {
                 restaurantId={restaurantId}
               />
             )}
-            <section className="space-y-4">
-              <h2 className="semi-bold text-xl">Reviews</h2>
-              <ul className="space-y-6">
-                {reviews.reviews.map((review) => (
-                  <li key={review.id} className="space-y-2">
-                    <div className="flex items-center space-x-2 rounded-full">
-                      <div className="relative h-12 w-12 overflow-hidden rounded-full">
-                        {review.user.imageUrl === undefined ||
-                        review.user.imageUrl === null ? (
-                          <div className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-slate-600">
-                            <UserIcon className="block h-6 w-6" aria-hidden />
-                          </div>
-                        ) : (
-                          <Image
-                            src={review.user.imageUrl}
-                            alt={review.user.name}
-                            fill
-                            className="relative"
-                            objectFit="cover"
-                          />
-                        )}
-                      </div>
-                      <p className="semi-bold">{review.user.name}</p>
-                    </div>
-                    <p>{review.text}</p>
-                  </li>
-                ))}
-              </ul>
-            </section>
+            <YelpReviews restaurantId={restaurantId} />
           </div>
         </div>
         <AddReviewModal
@@ -153,7 +117,6 @@ export default function RestaurantById() {
     );
   }, [
     restaurant,
-    reviews,
     handleFavoriteClick,
     isFavorite,
     openModal,
