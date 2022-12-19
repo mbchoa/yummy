@@ -28,7 +28,7 @@ export default function RestaurantById() {
   const { data: favoriteRestaurant, isLoading: isLoadingFavoriteRestaurant } =
     trpc.favoriteRestaurant.byId.useQuery(
       { id: restaurantId },
-      { enabled: restaurant !== undefined }
+      { enabled: restaurant !== undefined, refetchOnWindowFocus: false }
     );
 
   const { mutateAsync: addRestaurant } =
@@ -60,14 +60,14 @@ export default function RestaurantById() {
         <div className="space-y-4 p-4">
           <div className="grid grid-cols-4 grid-rows-2 gap-2">
             <header className="col-span-full row-start-1 space-y-4">
-              {isLoading || restaurant === undefined ? (
+              {isLoadingYelpRestaurant || restaurant === undefined ? (
                 <div className="h-8 w-48 animate-pulse rounded bg-gray-300" />
               ) : (
                 <h1 className="semi text-2xl">{restaurant.name}</h1>
               )}
             </header>
             <address className="col-span-2 row-start-2 not-italic">
-              {isLoading || restaurant === undefined ? (
+              {isLoadingYelpRestaurant || restaurant === undefined ? (
                 <div className="space-y-1">
                   <div className="h-6 w-32 animate-pulse rounded bg-gray-300" />
                   <div className="h-6 w-36 animate-pulse rounded bg-gray-300" />
@@ -87,13 +87,15 @@ export default function RestaurantById() {
                 size="sm"
                 color="primary"
                 variant="ghost"
-                disabled={isLoading}
+                disabled={isLoadingYelpRestaurant}
                 onClick={handleFavoriteClick}
                 LeftIcon={
                   <HeartIcon
                     className={classNames(
-                      "h-7 w-7 fill-none stroke-gray-300",
-                      !isLoading && isFavorite && "fill-red-400 stroke-red-400"
+                      "h-7 w-7",
+                      isLoading || !isFavorite
+                        ? "fill-none stroke-gray-300"
+                        : "fill-red-400 stroke-red-400"
                     )}
                   />
                 }
@@ -119,14 +121,15 @@ export default function RestaurantById() {
       </>
     );
   }, [
+    isLoadingYelpRestaurant,
     restaurant,
     handleFavoriteClick,
+    isLoading,
     isFavorite,
     openModal,
     restaurantId,
     isAddReviewModalOpen,
     closeModal,
-    isLoading,
   ]);
 
   return <Layout>{maybeRenderBody()}</Layout>;
