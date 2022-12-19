@@ -166,11 +166,6 @@ export const FavoriteFoods = ({
             </div>
           </li>
         ))}
-        <li className="mt-2">
-          <Button size="sm" onClick={openModal}>
-            Add
-          </Button>
-        </li>
       </ul>
     );
   }, [
@@ -185,7 +180,12 @@ export const FavoriteFoods = ({
 
   return (
     <section className="space-y-4">
-      <h2 className="semi-bold text-xl">Favorite Foods</h2>
+      <header className="flex justify-between">
+        <h2 className="semi-bold text-xl">Favorites</h2>
+        <Button size="sm" onClick={openModal}>
+          Add
+        </Button>
+      </header>
       {maybeRenderBody()}
     </section>
   );
