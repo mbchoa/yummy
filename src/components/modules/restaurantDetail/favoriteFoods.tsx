@@ -135,9 +135,8 @@ export const FavoriteFoods = ({
                 LeftIcon={
                   <HandThumbDownIcon
                     className={classNames(
-                      "h-5 w-5",
-                      foodReview.like === "DISLIKE" &&
-                        "fill-red-400 stroke-red-400"
+                      "h-5 w-5 stroke-slate-600",
+                      foodReview.like === "DISLIKE" && "fill-red-400"
                     )}
                   />
                 }
@@ -149,9 +148,8 @@ export const FavoriteFoods = ({
                 LeftIcon={
                   <HandThumbUpIcon
                     className={classNames(
-                      "h-5 w-5",
-                      foodReview.like === "LIKE" &&
-                        "fill-green-400 stroke-green-400"
+                      "h-5 w-5 stroke-slate-600",
+                      foodReview.like === "LIKE" && "fill-green-500"
                     )}
                   />
                 }
