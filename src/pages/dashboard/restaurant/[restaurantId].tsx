@@ -20,23 +20,16 @@ export default function RestaurantById() {
 
   const { query } = useRouter<"/dashboard/restaurant/[restaurantId]">();
   const { restaurantId } = query;
-  const { data: restaurant } = trpc.yelp.byId.useQuery(
-    {
-      id: restaurantId,
-    },
-    {
-      enabled: restaurantId !== undefined,
-      refetchOnWindowFocus: false,
-    }
-  );
-  const { data: favoriteRestaurant } = trpc.favoriteRestaurant.byId.useQuery(
-    {
-      id: restaurantId,
-    },
-    {
-      enabled: restaurant !== undefined,
-    }
-  );
+  const { data: restaurant, isLoading: isLoadingYelpRestaurant } =
+    trpc.yelp.byId.useQuery(
+      { id: restaurantId },
+      { enabled: restaurantId !== undefined, refetchOnWindowFocus: false }
+    );
+  const { data: favoriteRestaurant, isLoading: isLoadingFavoriteRestaurant } =
+    trpc.favoriteRestaurant.byId.useQuery(
+      { id: restaurantId },
+      { enabled: restaurant !== undefined }
+    );
 
   const { mutateAsync: addRestaurant } =
     trpc.favoriteRestaurant.add.useMutation();
@@ -59,38 +52,48 @@ export default function RestaurantById() {
     setIsFavorite(!isFavorite);
   }, [addRestaurant, isFavorite, removeRestaurant, restaurantId]);
 
-  const maybeRenderBody = useCallback(() => {
-    if (restaurant === undefined) {
-      return <p className="px-4">Loading...</p>;
-    }
+  const isLoading = isLoadingYelpRestaurant || isLoadingFavoriteRestaurant;
 
+  const maybeRenderBody = useCallback(() => {
     return (
       <>
         <div className="space-y-4 p-4">
           <div className="grid grid-cols-4 grid-rows-2 gap-2">
             <header className="col-span-full row-start-1 space-y-4">
-              <h1 className="semi-bold text-2xl">{restaurant.name}</h1>
+              {isLoading || restaurant === undefined ? (
+                <div className="h-8 w-48 animate-pulse rounded bg-gray-300" />
+              ) : (
+                <h1 className="semi text-2xl">{restaurant.name}</h1>
+              )}
             </header>
             <address className="col-span-2 row-start-2 not-italic">
-              <p>{restaurant.location.address1}</p>
-              <p>
-                {restaurant.location.city}, {restaurant.location.state}{" "}
-                {restaurant.location.zipCode}
-              </p>
+              {isLoading || restaurant === undefined ? (
+                <div className="space-y-1">
+                  <div className="h-6 w-32 animate-pulse rounded bg-gray-300" />
+                  <div className="h-6 w-36 animate-pulse rounded bg-gray-300" />
+                </div>
+              ) : (
+                <>
+                  <p>{restaurant.location.address1}</p>
+                  <p>
+                    {restaurant.location.city}, {restaurant.location.state}{" "}
+                    {restaurant.location.zipCode}
+                  </p>
+                </>
+              )}
             </address>
             <div className="col-span-2 col-start-4 row-start-2 flex h-full w-full items-center justify-end">
               <Button
                 size="sm"
                 color="primary"
                 variant="ghost"
+                disabled={isLoading}
                 onClick={handleFavoriteClick}
                 LeftIcon={
                   <HeartIcon
                     className={classNames(
-                      "h-7 w-7",
-                      isFavorite
-                        ? "fill-red-400 stroke-red-400"
-                        : "fill-none stroke-gray-300"
+                      "h-7 w-7 fill-none stroke-gray-300",
+                      !isLoading && isFavorite && "fill-red-400 stroke-red-400"
                     )}
                   />
                 }
@@ -123,6 +126,7 @@ export default function RestaurantById() {
     restaurantId,
     isAddReviewModalOpen,
     closeModal,
+    isLoading,
   ]);
 
   return <Layout>{maybeRenderBody()}</Layout>;

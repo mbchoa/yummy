@@ -20,12 +20,8 @@ export const FavoriteFoods = ({
 }: IFavoriteFoodsProps) => {
   const { data: favoriteRestaurant, isLoading: isFavoriteRestaurantLoading } =
     trpc.favoriteRestaurant.byId.useQuery(
-      {
-        id: restaurantId,
-      },
-      {
-        enabled: restaurantId !== undefined,
-      }
+      { id: restaurantId },
+      { enabled: restaurantId !== undefined }
     );
   const {
     data: foodReviews,
@@ -35,6 +31,7 @@ export const FavoriteFoods = ({
     { restaurantId },
     { enabled: favoriteRestaurant !== undefined }
   );
+  const isLoading = isFavoriteRestaurantLoading || isFoodReviewsLoading;
   const { mutateAsync: updateFoodReview } =
     trpc.foodReview.update.useMutation();
   const { mutateAsync: removeFoodReview } =
@@ -68,8 +65,40 @@ export const FavoriteFoods = ({
   );
 
   const maybeRenderBody = useCallback(() => {
-    if (isFavoriteRestaurantLoading || isFoodReviewsLoading) {
-      return <p>Loading...</p>;
+    if (isLoading) {
+      return (
+        <ul className="space-y-2">
+          {[1, 2, 3, 4].map((key) => (
+            <li key={key} className="flex items-center justify-between">
+              <p className="h-6 w-40 animate-pulse rounded bg-gray-300" />
+              <div className="flex items-center space-x-2">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={isLoading}
+                  LeftIcon={
+                    <HandThumbDownIcon className="h-5 w-5 stroke-gray-400" />
+                  }
+                />
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={isLoading}
+                  LeftIcon={
+                    <HandThumbUpIcon className="h-5 w-5 stroke-gray-400" />
+                  }
+                />
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={isLoading}
+                  LeftIcon={<TrashIcon className="h-5 w-5 stroke-gray-400" />}
+                />
+              </div>
+            </li>
+          ))}
+        </ul>
+      );
     }
 
     if (favoriteRestaurant === undefined || foodReviews === undefined) {
@@ -150,9 +179,8 @@ export const FavoriteFoods = ({
     handleDislikeFoodReview,
     handleLikeFoodReview,
     handleRemoveFoodReview,
-    isFavoriteRestaurantLoading,
-    isFoodReviewsLoading,
     openModal,
+    isLoading,
   ]);
 
   return (
