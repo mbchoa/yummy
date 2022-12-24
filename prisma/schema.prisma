@@ -67,6 +67,7 @@ model FavoriteRestaurant {
   updatedAt       DateTime         @updatedAt
   restaurantId    String
   userId          String
+  like            Like             @default(LIKE)
   user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   restaurantItems RestaurantItem[]
 
