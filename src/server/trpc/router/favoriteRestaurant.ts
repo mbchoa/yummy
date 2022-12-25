@@ -43,4 +43,24 @@ export const favoriteRestaurant = router({
         },
       });
     }),
+  update: protectedProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        like: z.enum(["LIKE", "DISLIKE"]),
+      })
+    )
+    .mutation(({ input, ctx }) => {
+      return ctx.prisma.favoriteRestaurant.update({
+        where: {
+          restaurantId_userId: {
+            restaurantId: input.id,
+            userId: ctx.session.user.id,
+          },
+        },
+        data: {
+          like: input.like,
+        },
+      });
+    }),
 });
