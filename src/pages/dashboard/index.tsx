@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { Layout } from "../../components/layout";
 import { RestaurantsList } from "../../components/modules/dashboard/restaurantsList";
 import { SearchWidget } from "../../components/searchWidget";
+import type { IYelpBusinessSchema } from "../../models/YelpSchemas";
 import { trpc } from "../../utils/trpc";
 
 export default function Dashboard() {
@@ -21,23 +22,12 @@ export default function Dashboard() {
       { enabled: favoriteRestaurants !== undefined }
     );
 
-  const restaurantsGroupedByCity = useMemo(() => {
+  const data = useMemo(() => {
     if (restaurants === undefined) {
       return undefined;
     }
 
-    const restaurantsGroupedByCity: Record<string, typeof restaurants> = {};
-    restaurants.forEach((restaurant) => {
-      const city = restaurant.location.city;
-      const restaurantsInCity = restaurantsGroupedByCity[city];
-      if (restaurantsInCity === undefined) {
-        restaurantsGroupedByCity[city] = [restaurant];
-      } else {
-        restaurantsGroupedByCity[city] = [...restaurantsInCity, restaurant];
-      }
-    });
-
-    return restaurantsGroupedByCity;
+    return groupRestaurantsByCity(restaurants);
   }, [restaurants]);
 
   return (
@@ -48,10 +38,27 @@ export default function Dashboard() {
           <h1 className="text-2xl font-semibold">Favorites</h1>
           <RestaurantsList
             isLoading={isLoadingFavoriteRestaurants || isLoadingYelpRestaurants}
-            restaurants={restaurantsGroupedByCity}
+            restaurants={data}
           />
         </section>
       </div>
     </Layout>
   );
 }
+
+const groupRestaurantsByCity = (
+  restaurants: SnakeToCamelCaseNested<IYelpBusinessSchema>[]
+) => {
+  const restaurantsGroupedByCity: Record<string, typeof restaurants> = {};
+  restaurants.forEach((restaurant) => {
+    const city = restaurant.location.city;
+    const restaurantsInCity = restaurantsGroupedByCity[city];
+    if (restaurantsInCity === undefined) {
+      restaurantsGroupedByCity[city] = [restaurant];
+    } else {
+      restaurantsGroupedByCity[city] = [...restaurantsInCity, restaurant];
+    }
+  });
+
+  return restaurantsGroupedByCity;
+};
