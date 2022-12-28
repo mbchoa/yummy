@@ -1,14 +1,24 @@
+import { Like } from "@prisma/client";
 import { z } from "zod";
 import { protectedProcedure, router } from "../trpc";
 
 export const favoriteRestaurant = router({
-  all: protectedProcedure.query(({ ctx }) => {
-    return ctx.prisma.favoriteRestaurant.findMany({
-      where: {
-        userId: ctx.session.user.id,
-      },
-    });
-  }),
+  all: protectedProcedure
+    .input(
+      z
+        .object({
+          like: z.enum([Like.LIKE, Like.DISLIKE, Like.UNSELECTED]),
+        })
+        .optional()
+    )
+    .query(({ input, ctx }) => {
+      return ctx.prisma.favoriteRestaurant.findMany({
+        where: {
+          userId: ctx.session.user.id,
+          like: input?.like ?? undefined,
+        },
+      });
+    }),
   add: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(({ input, ctx }) => {

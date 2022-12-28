@@ -1,3 +1,4 @@
+import { Like } from "@prisma/client";
 import { useSession } from "next-auth/react";
 import { useMemo } from "react";
 import { Layout } from "../../components/layout";
@@ -8,17 +9,16 @@ import { trpc } from "../../utils/trpc";
 export default function Dashboard() {
   const { data: session } = useSession();
   const { data: favoriteRestaurants, isLoading: isLoadingFavoriteRestaurants } =
-    trpc.favoriteRestaurant.all.useQuery(undefined, {
-      enabled: session !== undefined,
-    });
+    trpc.favoriteRestaurant.all.useQuery(
+      { like: Like.LIKE },
+      { enabled: session !== undefined }
+    );
   const { data: restaurants, isLoading: isLoadingYelpRestaurants } =
     trpc.yelp.byIds.useQuery(
       (favoriteRestaurants ?? []).map(
         (favoriteRestaurant) => favoriteRestaurant.restaurantId
       ),
-      {
-        enabled: favoriteRestaurants !== undefined,
-      }
+      { enabled: favoriteRestaurants !== undefined }
     );
 
   const restaurantsGroupedByCity = useMemo(() => {
