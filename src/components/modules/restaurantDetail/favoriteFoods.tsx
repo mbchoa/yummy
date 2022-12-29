@@ -136,7 +136,7 @@ export const FavoriteFoods = ({
                   <HandThumbDownIcon
                     className={classNames(
                       "h-5 w-5 stroke-slate-600",
-                      foodReview.like === "DISLIKE" && "fill-red-400"
+                      foodReview.like === "DISLIKE" && "fill-red-500"
                     )}
                   />
                 }

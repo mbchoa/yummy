@@ -1,4 +1,8 @@
-import { HeartIcon } from "@heroicons/react/24/outline";
+import {
+  HandThumbDownIcon,
+  HandThumbUpIcon,
+} from "@heroicons/react/24/outline";
+import { Like } from "@prisma/client";
 import classNames from "classnames";
 import { useRouter } from "next/router";
 import { useCallback, useEffect, useState } from "react";
@@ -38,7 +42,10 @@ export default function RestaurantById() {
   const [isFavorite, setIsFavorite] = useState(false);
 
   useEffect(() => {
-    if (favoriteRestaurant !== undefined) {
+    if (
+      favoriteRestaurant !== undefined &&
+      favoriteRestaurant.like === Like.LIKE
+    ) {
       setIsFavorite(true);
     }
   }, [favoriteRestaurant]);
@@ -90,12 +97,29 @@ export default function RestaurantById() {
                 disabled={isLoadingYelpRestaurant}
                 onClick={handleFavoriteClick}
                 LeftIcon={
-                  <HeartIcon
+                  <HandThumbDownIcon
+                    className={classNames(
+                      "h-7 w-7",
+                      isLoading || isFavorite
+                        ? "fill-none stroke-gray-300"
+                        : "fill-red-500 stroke-slate-600"
+                    )}
+                  />
+                }
+              />
+              <Button
+                size="sm"
+                color="primary"
+                variant="ghost"
+                disabled={isLoadingYelpRestaurant}
+                onClick={handleFavoriteClick}
+                LeftIcon={
+                  <HandThumbUpIcon
                     className={classNames(
                       "h-7 w-7",
                       isLoading || !isFavorite
                         ? "fill-none stroke-gray-300"
-                        : "fill-red-400 stroke-red-400"
+                        : "fill-green-500 stroke-slate-600"
                     )}
                   />
                 }
@@ -104,12 +128,7 @@ export default function RestaurantById() {
           </div>
           <hr className="bg-gray-300" />
           <div className="space-y-8">
-            {isFavorite && (
-              <FavoriteFoods
-                openModal={openModal}
-                restaurantId={restaurantId}
-              />
-            )}
+            <FavoriteFoods openModal={openModal} restaurantId={restaurantId} />
             <YelpReviews restaurantId={restaurantId} />
           </div>
         </div>
