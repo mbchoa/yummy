@@ -15,14 +15,21 @@ export const RestaurantsList = ({
 }: IRestaurantsListProps) => {
   if (isLoading) {
     return (
-      <ul className="space-y-2">
-        {[1, 2, 3, 4, 5].map((key) => (
-          <li
-            key={key}
-            className="h-9 w-full animate-pulse rounded bg-gray-200"
-          />
+      <div className="space-y-6">
+        {[1, 2].map((key) => (
+          <section key={key} className="space-y-2">
+            <h2 className="h-7 w-1/2 animate-pulse rounded bg-gray-200 text-xl" />
+            <ul className="space-y-2">
+              {[1, 2, 3, 4, 5].map((key) => (
+                <li
+                  key={key}
+                  className="h-5 w-3/4 animate-pulse rounded bg-gray-200"
+                />
+              ))}
+            </ul>
+          </section>
         ))}
-      </ul>
+      </div>
     );
   }
 
