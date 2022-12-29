@@ -15,7 +15,7 @@ export const YelpReviews = ({ restaurantId }: IYelpReviewsProps) => {
   if (isLoading) {
     return (
       <section className="space-y-4">
-        <h2 className="semi-bold text-xl">Reviews</h2>
+        <h2 className="semi-bold text-xl">Yelp Reviews</h2>
         <ul className="space-y-6">
           {[1, 2, 3].map((key) => (
             <li key={key} className="space-y-2">
@@ -47,7 +47,7 @@ export const YelpReviews = ({ restaurantId }: IYelpReviewsProps) => {
 
   return (
     <section className="space-y-4">
-      <h2 className="semi-bold text-xl">Reviews</h2>
+      <h2 className="semi-bold text-xl">Yelp Reviews</h2>
       <ul className="space-y-6">
         {yelpReviews.reviews.map((review) => (
           <li key={review.id} className="space-y-2">
