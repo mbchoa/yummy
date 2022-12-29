@@ -16,32 +16,57 @@ export default function Dashboard() {
       { like: Like.LIKE },
       { enabled: session !== undefined }
     );
-  const { data: restaurants, isLoading: isLoadingYelpRestaurants } =
-    trpc.yelp.byIds.useQuery(
-      (favoriteRestaurants ?? []).map(
-        (favoriteRestaurant) => favoriteRestaurant.restaurantId
-      ),
-      { enabled: favoriteRestaurants !== undefined }
+  const {
+    data: likedYelpRestaurants,
+    isLoading: isLoadingFavoriteYelpRestaurants,
+  } = trpc.yelp.byIds.useQuery(
+    (favoriteRestaurants ?? []).map(
+      (favoriteRestaurant) => favoriteRestaurant.restaurantId
+    ),
+    { enabled: favoriteRestaurants !== undefined }
+  );
+  const { data: dislikedRestaurants, isLoading: isLoadingDislikedRestaurants } =
+    trpc.favoriteRestaurant.all.useQuery(
+      { like: Like.DISLIKE },
+      { enabled: session !== undefined }
     );
+  const {
+    data: dislikedYelpRestaurants,
+    isLoading: isLoadingDislikedYelpRestaurants,
+  } = trpc.yelp.byIds.useQuery(
+    (dislikedRestaurants ?? []).map(
+      (dislikedRestaurant) => dislikedRestaurant.restaurantId
+    ),
+    { enabled: dislikedRestaurants !== undefined }
+  );
 
   const data = useMemo(() => {
     return {
       Favorites: {
         restaurantsGroupedByCity:
-          restaurants !== undefined
-            ? groupRestaurantsByCity(restaurants)
+          likedYelpRestaurants !== undefined
+            ? groupRestaurantsByCity(likedYelpRestaurants)
             : undefined,
-        isLoading: isLoadingFavoriteRestaurants || isLoadingYelpRestaurants,
+        isLoading:
+          isLoadingFavoriteRestaurants || isLoadingFavoriteYelpRestaurants,
       },
       Dislikes: {
         restaurantsGroupedByCity:
-          restaurants !== undefined
-            ? groupRestaurantsByCity(restaurants)
+          dislikedYelpRestaurants !== undefined
+            ? groupRestaurantsByCity(dislikedYelpRestaurants)
             : undefined,
-        isLoading: isLoadingFavoriteRestaurants || isLoadingYelpRestaurants,
+        isLoading:
+          isLoadingDislikedRestaurants || isLoadingDislikedYelpRestaurants,
       },
     };
-  }, [isLoadingFavoriteRestaurants, isLoadingYelpRestaurants, restaurants]);
+  }, [
+    dislikedYelpRestaurants,
+    isLoadingDislikedRestaurants,
+    isLoadingDislikedYelpRestaurants,
+    isLoadingFavoriteRestaurants,
+    isLoadingFavoriteYelpRestaurants,
+    likedYelpRestaurants,
+  ]);
 
   const maybeRenderPanels = useCallback(() => {
     return Object.values(data).map(

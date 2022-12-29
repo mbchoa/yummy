@@ -1,3 +1,4 @@
+import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import type { IYelpBusinessSchema } from "../../../models/YelpSchemas";
 import { Button } from "../../button";
 import { NextLinkRenderer } from "../../nextLinkRenderer";
@@ -35,6 +36,15 @@ export const RestaurantsList = ({
 
   if (restaurants === undefined) {
     return <p className="px-4">Unable to fetch favorite restaurants.</p>;
+  }
+
+  if (Object.keys(restaurants).length === 0) {
+    return (
+      <div className="flex h-60 flex-col items-center justify-center space-y-4">
+        <InformationCircleIcon className="h-10 w-10 text-gray-400" />
+        <p>No restaurants added yet.</p>
+      </div>
+    );
   }
 
   return (
