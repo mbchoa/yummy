@@ -14,6 +14,7 @@ import { YelpReviews } from "../../../components/modules/restaurantDetail/yelpRe
 import { trpc } from "../../../utils/trpc";
 
 export default function RestaurantById() {
+  // modal
   const [isAddReviewModalOpen, setIsAddReviewModalOpen] = useState(false);
   const closeModal = useCallback(() => {
     setIsAddReviewModalOpen(false);
@@ -22,6 +23,7 @@ export default function RestaurantById() {
     setIsAddReviewModalOpen(true);
   }, []);
 
+  // data query
   const { query } = useRouter<"/dashboard/restaurant/[restaurantId]">();
   const { restaurantId } = query;
   const { data: restaurant, isLoading: isLoadingYelpRestaurant } =
@@ -29,37 +31,121 @@ export default function RestaurantById() {
       { id: restaurantId },
       { enabled: restaurantId !== undefined, refetchOnWindowFocus: false }
     );
-  const { data: favoriteRestaurant, isLoading: isLoadingFavoriteRestaurant } =
-    trpc.favoriteRestaurant.byId.useQuery(
-      { id: restaurantId },
-      { enabled: restaurant !== undefined, refetchOnWindowFocus: false }
-    );
+  const {
+    data: savedRestaurant,
+    isLoading: isLoadingSavedRestaurant,
+    refetch,
+  } = trpc.favoriteRestaurant.byId.useQuery(
+    { id: restaurantId },
+    {
+      enabled: restaurant !== undefined,
+      refetchOnWindowFocus: false,
+      retry: false,
+    }
+  );
 
+  // data mutation
   const { mutateAsync: addRestaurant } =
     trpc.favoriteRestaurant.add.useMutation();
+  const { mutateAsync: updateRestaurant } =
+    trpc.favoriteRestaurant.update.useMutation();
   const { mutateAsync: removeRestaurant } =
     trpc.favoriteRestaurant.remove.useMutation();
-  const [isFavorite, setIsFavorite] = useState(false);
+  const [like, setLike] = useState<Like>(Like.UNSELECTED);
 
   useEffect(() => {
-    if (
-      favoriteRestaurant !== undefined &&
-      favoriteRestaurant.like === Like.LIKE
-    ) {
-      setIsFavorite(true);
+    if (savedRestaurant !== undefined) {
+      setLike(savedRestaurant.like);
     }
-  }, [favoriteRestaurant]);
+  }, [savedRestaurant]);
+
+  const handleDislikeClick = useCallback(async () => {
+    if (savedRestaurant === undefined) {
+      await addRestaurant({
+        id: restaurantId,
+        like: Like.DISLIKE,
+      });
+      setLike(Like.DISLIKE);
+      return;
+    }
+
+    if (like === Like.UNSELECTED) {
+      await addRestaurant({
+        id: restaurantId,
+        like: Like.DISLIKE,
+      });
+      setLike(Like.DISLIKE);
+      return;
+    }
+
+    if (like === Like.DISLIKE) {
+      await removeRestaurant({
+        id: restaurantId,
+      });
+      await refetch();
+      setLike(Like.UNSELECTED);
+      return;
+    }
+
+    await updateRestaurant({
+      id: restaurantId,
+      like: Like.DISLIKE,
+    });
+    setLike(Like.DISLIKE);
+  }, [
+    addRestaurant,
+    like,
+    refetch,
+    removeRestaurant,
+    restaurantId,
+    savedRestaurant,
+    updateRestaurant,
+  ]);
 
   const handleFavoriteClick = useCallback(async () => {
-    if (isFavorite) {
-      await removeRestaurant({ id: restaurantId });
-    } else {
-      await addRestaurant({ id: restaurantId });
+    if (savedRestaurant === undefined) {
+      await addRestaurant({
+        id: restaurantId,
+        like: Like.LIKE,
+      });
+      setLike(Like.LIKE);
+      return;
     }
-    setIsFavorite(!isFavorite);
-  }, [addRestaurant, isFavorite, removeRestaurant, restaurantId]);
 
-  const isLoading = isLoadingYelpRestaurant || isLoadingFavoriteRestaurant;
+    if (like === Like.UNSELECTED) {
+      await addRestaurant({
+        id: restaurantId,
+        like: Like.LIKE,
+      });
+      setLike(Like.LIKE);
+      return;
+    }
+
+    if (like === Like.LIKE) {
+      await removeRestaurant({
+        id: restaurantId,
+      });
+      await refetch();
+      setLike(Like.UNSELECTED);
+      return;
+    }
+
+    await updateRestaurant({
+      id: restaurantId,
+      like: Like.LIKE,
+    });
+    setLike(Like.LIKE);
+  }, [
+    addRestaurant,
+    like,
+    refetch,
+    removeRestaurant,
+    restaurantId,
+    savedRestaurant,
+    updateRestaurant,
+  ]);
+
+  const isLoading = isLoadingYelpRestaurant || isLoadingSavedRestaurant;
 
   const maybeRenderBody = useCallback(() => {
     return (
@@ -95,12 +181,14 @@ export default function RestaurantById() {
                 color="primary"
                 variant="ghost"
                 disabled={isLoadingYelpRestaurant}
-                onClick={handleFavoriteClick}
+                onClick={handleDislikeClick}
                 LeftIcon={
                   <HandThumbDownIcon
                     className={classNames(
                       "h-7 w-7",
-                      isLoading || isFavorite
+                      isLoading ||
+                        like === Like.UNSELECTED ||
+                        like === Like.LIKE
                         ? "fill-none stroke-gray-300"
                         : "fill-red-500 stroke-slate-600"
                     )}
@@ -117,7 +205,9 @@ export default function RestaurantById() {
                   <HandThumbUpIcon
                     className={classNames(
                       "h-7 w-7",
-                      isLoading || !isFavorite
+                      isLoading ||
+                        like === Like.UNSELECTED ||
+                        like === Like.DISLIKE
                         ? "fill-none stroke-gray-300"
                         : "fill-green-500 stroke-slate-600"
                     )}
@@ -128,7 +218,12 @@ export default function RestaurantById() {
           </div>
           <hr className="bg-gray-300" />
           <div className="space-y-8">
-            <FavoriteFoods openModal={openModal} restaurantId={restaurantId} />
+            {like !== Like.UNSELECTED && (
+              <FavoriteFoods
+                openModal={openModal}
+                restaurantId={restaurantId}
+              />
+            )}
             <YelpReviews restaurantId={restaurantId} />
           </div>
         </div>
@@ -142,9 +237,10 @@ export default function RestaurantById() {
   }, [
     isLoadingYelpRestaurant,
     restaurant,
-    handleFavoriteClick,
+    handleDislikeClick,
     isLoading,
-    isFavorite,
+    like,
+    handleFavoriteClick,
     openModal,
     restaurantId,
     isAddReviewModalOpen,

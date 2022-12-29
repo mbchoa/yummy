@@ -20,12 +20,18 @@ export const favoriteRestaurant = router({
       });
     }),
   add: protectedProcedure
-    .input(z.object({ id: z.string() }))
+    .input(
+      z.object({
+        id: z.string(),
+        like: z.enum([Like.LIKE, Like.DISLIKE]),
+      })
+    )
     .mutation(({ input, ctx }) => {
       return ctx.prisma.favoriteRestaurant.create({
         data: {
           restaurantId: input.id,
           userId: ctx.session.user.id,
+          like: input.like,
         },
       });
     }),
@@ -57,7 +63,7 @@ export const favoriteRestaurant = router({
     .input(
       z.object({
         id: z.string(),
-        like: z.enum(["LIKE", "DISLIKE"]),
+        like: z.enum([Like.LIKE, Like.DISLIKE, Like.UNSELECTED]),
       })
     )
     .mutation(({ input, ctx }) => {
