@@ -1,5 +1,9 @@
 import { Menu, Transition } from "@headlessui/react";
-import { ChevronDownIcon } from "@heroicons/react/24/outline";
+import {
+  CheckIcon,
+  ChevronDownIcon,
+  PlusIcon,
+} from "@heroicons/react/24/outline";
 import classNames from "classnames";
 import { Fragment } from "react";
 
@@ -30,10 +34,11 @@ export const ListDropDown = () => {
                   href="#"
                   className={classNames(
                     active ? "bg-gray-100 text-gray-900" : "text-gray-700",
-                    "block px-4 py-2 text-sm"
+                    "flex px-4 py-2 text-sm"
                   )}
                 >
-                  Edit
+                  <CheckIcon className="mr-2 h-5 w-5" aria-hidden="true" />
+                  Personal
                 </a>
               )}
             </Menu.Item>
@@ -43,38 +48,11 @@ export const ListDropDown = () => {
                   href="#"
                   className={classNames(
                     active ? "bg-gray-100 text-gray-900" : "text-gray-700",
-                    "block px-4 py-2 text-sm"
+                    "flex px-4 py-2 text-sm"
                   )}
                 >
-                  Duplicate
-                </a>
-              )}
-            </Menu.Item>
-          </div>
-          <div className="py-1">
-            <Menu.Item>
-              {({ active }) => (
-                <a
-                  href="#"
-                  className={classNames(
-                    active ? "bg-gray-100 text-gray-900" : "text-gray-700",
-                    "block px-4 py-2 text-sm"
-                  )}
-                >
-                  Archive
-                </a>
-              )}
-            </Menu.Item>
-            <Menu.Item>
-              {({ active }) => (
-                <a
-                  href="#"
-                  className={classNames(
-                    active ? "bg-gray-100 text-gray-900" : "text-gray-700",
-                    "block px-4 py-2 text-sm"
-                  )}
-                >
-                  Move
+                  <div className="mr-2 h-5 w-5" aria-hidden="true"></div>
+                  ChoyShin
                 </a>
               )}
             </Menu.Item>
@@ -86,38 +64,11 @@ export const ListDropDown = () => {
                   href="#"
                   className={classNames(
                     active ? "bg-gray-100 text-gray-900" : "text-gray-700",
-                    "block px-4 py-2 text-sm"
+                    "flex px-4 py-2 text-sm"
                   )}
                 >
-                  Share
-                </a>
-              )}
-            </Menu.Item>
-            <Menu.Item>
-              {({ active }) => (
-                <a
-                  href="#"
-                  className={classNames(
-                    active ? "bg-gray-100 text-gray-900" : "text-gray-700",
-                    "block px-4 py-2 text-sm"
-                  )}
-                >
-                  Add to favorites
-                </a>
-              )}
-            </Menu.Item>
-          </div>
-          <div className="py-1">
-            <Menu.Item>
-              {({ active }) => (
-                <a
-                  href="#"
-                  className={classNames(
-                    active ? "bg-gray-100 text-gray-900" : "text-gray-700",
-                    "block px-4 py-2 text-sm"
-                  )}
-                >
-                  Delete
+                  <PlusIcon className="mr-2 h-5 w-5" aria-hidden="true" />
+                  Add new list
                 </a>
               )}
             </Menu.Item>
