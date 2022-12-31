@@ -1,11 +1,10 @@
 import { Tab } from "@headlessui/react";
-import { UserPlusIcon } from "@heroicons/react/24/outline";
 import { Like } from "@prisma/client";
 import classNames from "classnames";
 import { useSession } from "next-auth/react";
 import { useCallback, useMemo } from "react";
-import { Button } from "../../components/button";
 import { Layout } from "../../components/layout";
+import { ListDropDown } from "../../components/modules/dashboard/listDropdown";
 import { RestaurantsList } from "../../components/modules/dashboard/restaurantsList";
 import { SearchWidget } from "../../components/searchWidget";
 import type { IYelpBusinessSchema } from "../../models/YelpSchemas";
@@ -113,7 +112,7 @@ export default function Dashboard() {
                 </Tab>
               ))}
             </Tab.List>
-            <Button RightIcon={<UserPlusIcon className="h-5 w-5" />} />
+            <ListDropDown />
           </div>
           <Tab.Panels className="mt-4">{maybeRenderPanels()}</Tab.Panels>
         </Tab.Group>
