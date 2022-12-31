@@ -51,6 +51,8 @@ model User {
   sessions            Session[]
   reviews             RestaurantItemReview[]
   favoriteRestaurants FavoriteRestaurant[]
+  collaborators       Collaborator[]         @relation("collaborators")
+  owners              Collaborator[]         @relation("owners")
 }
 
 model VerificationToken {
@@ -101,4 +103,14 @@ enum Like {
   LIKE
   DISLIKE
   UNSELECTED
+}
+
+model Collaborator {
+  id             String   @unique @default(cuid())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  collaborator   User     @relation("collaborators", fields: [collaboratorId], references: [id], onDelete: Cascade)
+  collaboratorId String
+  owner          User     @relation("owners", fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId        String
 }

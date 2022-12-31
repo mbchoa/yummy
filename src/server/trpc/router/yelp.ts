@@ -10,7 +10,7 @@ import type {
 
 import { publicProcedure, router } from "../trpc";
 
-export const yelpRouter = router({
+export const yelp = router({
   search: publicProcedure
     .input(
       z.object({
