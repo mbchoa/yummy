@@ -1,3 +1,4 @@
+import type { User } from "@prisma/client";
 import { z } from "zod";
 import { protectedProcedure, router } from "../trpc";
 
@@ -14,6 +15,8 @@ export const user = router({
     .query(({ input, ctx }) => {
       const searchTerm = `${input.term}:*`;
       return ctx.prisma
-        .$queryRaw`SELECT * FROM "public"."User" WHERE to_tsvector(concat_ws(' ', "public"."User"."email","public"."User"."name")) @@ to_tsquery(${searchTerm})`;
+        .$queryRaw`SELECT * FROM "public"."User" WHERE to_tsvector(concat_ws(' ', "public"."User"."email","public"."User"."name")) @@ to_tsquery(${searchTerm})` as Promise<
+        User[]
+      >;
     }),
 });
