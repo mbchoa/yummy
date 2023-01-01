@@ -25,6 +25,7 @@ export const AddCollaboratorModal = ({
       enabled: search.length > 0,
     }
   );
+  const { data: allCollaborators } = trpc.collaborator.all.useQuery();
   const { mutateAsync: addCollaborator, isLoading: isAddingCollaborator } =
     trpc.collaborator.add.useMutation();
   const handleChange = useCallback(
@@ -57,6 +58,8 @@ export const AddCollaboratorModal = ({
     if (
       searchResults === undefined ||
       searchResults === null ||
+      allCollaborators === undefined ||
+      allCollaborators.length === 0 ||
       searchResults.length === 0
     ) {
       return null;
@@ -65,13 +68,17 @@ export const AddCollaboratorModal = ({
     return (
       <>
         <hr className="my-4" />
-        <ul className="space-y-4 ">
+        <ul className="space-y-4">
           {searchResults.map((user) => {
+            const isCollaborator = allCollaborators.some(
+              (collaborator) => collaborator.collaboratorId === user.id
+            );
             return (
-              <li key={user.id}>
+              <li className="flex items-center justify-between" key={user.id}>
                 <Button
                   onClick={partial(handleSelectCollaborator, user)}
                   variant="ghost"
+                  disabled={isCollaborator}
                 >
                   <div className="flex h-12 items-center gap-4">
                     {user.image === null ? (
@@ -95,13 +102,16 @@ export const AddCollaboratorModal = ({
                     </div>
                   </div>
                 </Button>
+                {isCollaborator && (
+                  <span className="text-xs text-gray-500">ADDED</span>
+                )}
               </li>
             );
           })}
         </ul>
       </>
     );
-  }, [handleSelectCollaborator, searchResults]);
+  }, [handleSelectCollaborator, searchResults, allCollaborators]);
 
   return (
     <Transition appear show={isOpen} as={Fragment}>
