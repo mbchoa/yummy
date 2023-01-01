@@ -25,7 +25,8 @@ export const AddCollaboratorModal = ({
       enabled: search.length > 0,
     }
   );
-  const { data: allCollaborators } = trpc.collaborator.all.useQuery();
+  const { data: allCollaborators, refetch: refetchCollaborators } =
+    trpc.collaborator.all.useQuery();
   const { mutateAsync: addCollaborator, isLoading: isAddingCollaborator } =
     trpc.collaborator.add.useMutation();
   const handleChange = useCallback(
@@ -48,18 +49,17 @@ export const AddCollaboratorModal = ({
     async (event: React.MouseEvent<HTMLButtonElement>) => {
       event.preventDefault();
       await addCollaborator({ collaboratorId: selectedCollaboratorId });
+      await refetchCollaborators();
       setSearch("");
       closeModal();
     },
-    [addCollaborator, closeModal, selectedCollaboratorId]
+    [addCollaborator, closeModal, refetchCollaborators, selectedCollaboratorId]
   );
 
   const maybeRenderSearchResults = useCallback(() => {
     if (
       searchResults === undefined ||
       searchResults === null ||
-      allCollaborators === undefined ||
-      allCollaborators.length === 0 ||
       searchResults.length === 0
     ) {
       return null;
@@ -70,9 +70,11 @@ export const AddCollaboratorModal = ({
         <hr className="my-4" />
         <ul className="space-y-4">
           {searchResults.map((user) => {
-            const isCollaborator = allCollaborators.some(
-              (collaborator) => collaborator.collaboratorId === user.id
-            );
+            const isCollaborator =
+              allCollaborators !== undefined &&
+              allCollaborators.some(
+                (collaborator) => collaborator.collaboratorId === user.id
+              );
             return (
               <li className="flex items-center justify-between" key={user.id}>
                 <Button

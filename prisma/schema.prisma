@@ -107,11 +107,13 @@ enum Like {
 }
 
 model Collaborator {
-  id             String   @unique @default(cuid())
+  id             String   @id @default(cuid())
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   collaborator   User     @relation("collaborators", fields: [collaboratorId], references: [id], onDelete: Cascade)
   collaboratorId String
   owner          User     @relation("owners", fields: [ownerId], references: [id], onDelete: Cascade)
   ownerId        String
+
+  @@unique([collaboratorId, ownerId])
 }
