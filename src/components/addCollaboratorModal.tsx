@@ -1,6 +1,8 @@
 import { Dialog, Transition } from "@headlessui/react";
+import { UserIcon } from "@heroicons/react/24/outline";
 import type { User } from "@prisma/client";
 import partial from "lodash-es/partial";
+import Image from "next/image";
 import React, { Fragment, useCallback, useState } from "react";
 import { trpc } from "../utils/trpc";
 import { Button } from "./button";
@@ -23,7 +25,8 @@ export const AddCollaboratorModal = ({
       enabled: search.length > 0,
     }
   );
-  const { mutateAsync: addCollaborator } = trpc.collaborator.add.useMutation();
+  const { mutateAsync: addCollaborator, isLoading: isAddingCollaborator } =
+    trpc.collaborator.add.useMutation();
   const handleChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       setSearch(event.target.value);
@@ -34,7 +37,7 @@ export const AddCollaboratorModal = ({
   const handleSelectCollaborator = useCallback(
     (user: User, event: React.MouseEvent<HTMLButtonElement>) => {
       event.preventDefault();
-      setSearch(`${user.name} <${user.email}>`);
+      setSearch(user.name ?? user.email ?? "Unknown");
       setSelectedCollaboratorId(user.id);
     },
     []
@@ -43,11 +46,11 @@ export const AddCollaboratorModal = ({
   const handleAddCollaborator = useCallback(
     async (event: React.MouseEvent<HTMLButtonElement>) => {
       event.preventDefault();
-      // await addCollaborator({ collaboratorId: selectedCollaboratorId });
+      await addCollaborator({ collaboratorId: selectedCollaboratorId });
       setSearch("");
       closeModal();
     },
-    [closeModal]
+    [addCollaborator, closeModal, selectedCollaboratorId]
   );
 
   const maybeRenderSearchResults = useCallback(() => {
@@ -60,17 +63,43 @@ export const AddCollaboratorModal = ({
     }
 
     return (
-      <ul className="absolute top-full left-0 right-0 space-y-4 bg-white p-4 drop-shadow-xl">
-        {searchResults.map((user) => {
-          return (
-            <li key={user.id}>
-              <Button onClick={partial(handleSelectCollaborator, user)}>
-                {user.name} &lt;{user.email}&gt;
-              </Button>
-            </li>
-          );
-        })}
-      </ul>
+      <>
+        <hr className="my-4" />
+        <ul className="space-y-4 ">
+          {searchResults.map((user) => {
+            return (
+              <li key={user.id}>
+                <Button
+                  onClick={partial(handleSelectCollaborator, user)}
+                  variant="ghost"
+                >
+                  <div className="flex h-12 items-center gap-4">
+                    {user.image === null ? (
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-indigo-400">
+                        <UserIcon className="h-6 w-6" />
+                      </div>
+                    ) : (
+                      <Image
+                        className="inline-block h-12 w-12 rounded-full ring-2 ring-white"
+                        src={user.image}
+                        alt="Profile image"
+                        width={48}
+                        height={48}
+                      />
+                    )}
+                    <div className="flex flex-col">
+                      <span className="text-left">{user.name}</span>
+                      <span className="text-xs text-indigo-300">
+                        {user.email}
+                      </span>
+                    </div>
+                  </div>
+                </Button>
+              </li>
+            );
+          })}
+        </ul>
+      </>
     );
   }, [handleSelectCollaborator, searchResults]);
 
@@ -108,14 +137,21 @@ export const AddCollaboratorModal = ({
                   Add Collaborator
                 </Dialog.Title>
                 <form className="mt-2 flex space-x-4">
-                  <input
-                    type="text"
-                    className="flex-1 rounded text-sm"
-                    name="collaborator"
-                    value={search}
-                    onChange={handleChange}
-                  />
-                  <Button onClick={handleAddCollaborator}>Add</Button>
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      className="w-full rounded text-sm"
+                      name="collaborator"
+                      value={search}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <Button
+                    isLoading={isAddingCollaborator}
+                    onClick={handleAddCollaborator}
+                  >
+                    Add
+                  </Button>
                 </form>
                 {maybeRenderSearchResults()}
               </Dialog.Panel>
