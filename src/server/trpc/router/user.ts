@@ -4,7 +4,15 @@ import { protectedProcedure, router } from "../trpc";
 
 export const user = router({
   all: protectedProcedure.query(({ ctx }) => {
-    return ctx.prisma.user.findMany();
+    return ctx.prisma.user.findMany({
+      where: {
+        NOT: {
+          id: {
+            equals: ctx.session.user.id,
+          },
+        },
+      },
+    });
   }),
   search: protectedProcedure
     .input(
@@ -14,9 +22,11 @@ export const user = router({
     )
     .query(({ input, ctx }) => {
       const searchTerm = `${input.term}:*`;
-      return ctx.prisma
-        .$queryRaw`SELECT * FROM "public"."User" WHERE to_tsvector(concat_ws(' ', "public"."User"."email","public"."User"."name")) @@ to_tsquery(${searchTerm})` as Promise<
-        User[]
-      >;
+      return ctx.prisma.$queryRaw`
+        SELECT * FROM "public"."User"
+          WHERE to_tsvector(concat_ws(' ', "public"."User"."email","public"."User"."name")) @@ to_tsquery(${searchTerm})
+          AND
+          "public"."User"."id" != ${ctx.session.user.id}
+      ` as Promise<User[]>;
     }),
 });
