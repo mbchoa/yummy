@@ -1,17 +1,41 @@
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import { PrismaClient } from "@prisma/client";
 import NextAuth, { type NextAuthOptions } from "next-auth";
 import Auth0Provider from "next-auth/providers/auth0";
-// Prisma adapter for NextAuth, optional and can be removed
-import { PrismaAdapter } from "@next-auth/prisma-adapter";
 
 import { env } from "../../../env/server.mjs";
-import { prisma } from "../../../server/db/client";
+
+const prisma = new PrismaClient();
 
 export const authOptions: NextAuthOptions = {
-  // Include user.id on session
+  events: {
+    async createUser({ user }) {
+      const id = user.id;
+      const userSetting = await prisma.userSetting.findUnique({
+        where: {
+          userId: id,
+        },
+      });
+      if (userSetting === null) {
+        await prisma.userSetting.create({
+          data: {
+            userId: id,
+            selectedUserId: id,
+          },
+        });
+      }
+    },
+  },
   callbacks: {
-    session({ session, user }) {
+    async session({ session, user }) {
+      const userSetting = await prisma.userSetting.findUnique({
+        where: {
+          userId: user.id,
+        },
+      });
       if (session.user) {
         session.user.id = user.id;
+        session.user.settings = userSetting;
       }
       return session;
     },
