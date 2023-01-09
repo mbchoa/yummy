@@ -5,7 +5,7 @@ export const collaborator = router({
   all: protectedProcedure.query(({ ctx }) => {
     return ctx.prisma.collaborator.findMany({
       where: {
-        ownerId: ctx.session.user.id,
+        collaboratorId: ctx.session.user.id,
       },
     });
   }),

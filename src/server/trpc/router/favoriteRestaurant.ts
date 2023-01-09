@@ -1,4 +1,5 @@
 import { Like } from "@prisma/client";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { protectedProcedure, router } from "../trpc";
 
@@ -11,10 +12,52 @@ export const favoriteRestaurant = router({
         })
         .optional()
     )
-    .query(({ input, ctx }) => {
-      return ctx.prisma.favoriteRestaurant.findMany({
+    .query(async ({ input, ctx }) => {
+      // get user settings
+      const userSettings = await ctx.prisma.userSetting.findUnique({
         where: {
           userId: ctx.session.user.id,
+        },
+      });
+
+      if (userSettings === null) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "User settings not found",
+        });
+      }
+
+      // check if selected user is the same as the user
+      if (userSettings.selectedUserId === ctx.session.user.id) {
+        return ctx.prisma.favoriteRestaurant.findMany({
+          where: {
+            userId: ctx.session.user.id,
+            like: input?.like ?? undefined,
+          },
+        });
+      }
+
+      // check if use has access to selected user in user settings
+      const collaborator = await ctx.prisma.collaborator.findUnique({
+        where: {
+          collaboratorId_ownerId: {
+            collaboratorId: ctx.session.user.id,
+            ownerId: userSettings.selectedUserId,
+          },
+        },
+      });
+
+      if (collaborator === null) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message:
+            "User does not have access to selected user's favorites list",
+        });
+      }
+
+      return ctx.prisma.favoriteRestaurant.findMany({
+        where: {
+          userId: userSettings.selectedUserId,
           like: input?.like ?? undefined,
         },
       });
