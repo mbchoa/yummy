@@ -7,6 +7,9 @@ export const collaborator = router({
       where: {
         collaboratorId: ctx.session.user.id,
       },
+      include: {
+        owner: true,
+      },
     });
   }),
   add: protectedProcedure

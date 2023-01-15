@@ -4,11 +4,16 @@ import {
   ChevronDownIcon,
   UserPlusIcon,
 } from "@heroicons/react/24/outline";
-import classNames from "classnames";
+import { partial } from "lodash-es";
+import { useSession } from "next-auth/react";
 import { Fragment, useCallback, useState } from "react";
+import { trpc } from "../../../utils/trpc";
 import { AddCollaboratorModal } from "../../addCollaboratorModal";
+interface IListDropDownProps {
+  refetch: () => Promise<void>;
+}
 
-export const ListDropDown = () => {
+export const ListDropDown = ({ refetch }: IListDropDownProps) => {
   const [isAddCollaboratorModalOpen, setIsAddCollaboratorModalOpen] =
     useState(false);
   const closeModal = useCallback(() => {
@@ -17,6 +22,23 @@ export const ListDropDown = () => {
   const openModal = useCallback(() => {
     setIsAddCollaboratorModalOpen(true);
   }, []);
+  const { data: session } = useSession();
+  const { data: userSetting } = trpc.userSetting.get.useQuery();
+  const { data: otherUsers } = trpc.collaborator.all.useQuery();
+  const { mutateAsync: switchUser } = trpc.userSetting.switchUser.useMutation();
+
+  const handleSelectUser = useCallback(
+    async (userId: string | undefined) => {
+      if (userId === undefined) {
+        return;
+      }
+
+      await switchUser({ userId });
+      refetch();
+    },
+    [switchUser, refetch]
+  );
+
   return (
     <>
       <Menu as="div" className="relative inline-block text-left">
@@ -42,48 +64,43 @@ export const ListDropDown = () => {
           <Menu.Items className="absolute right-0 z-10 mt-2 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
             <div className="py-1">
               <Menu.Item>
-                {({ active }) => (
-                  <a
-                    href="#"
-                    className={classNames(
-                      active ? "bg-gray-100 text-gray-900" : "text-gray-700",
-                      "flex px-4 py-2 text-sm"
-                    )}
-                  >
+                <button
+                  className="flex w-full px-4 py-2 text-sm text-gray-700"
+                  onClick={partial(handleSelectUser, session?.user?.id)}
+                >
+                  {userSetting?.selectedUserId === session?.user?.id ? (
                     <CheckIcon className="mr-2 h-5 w-5" aria-hidden="true" />
-                    Personal
-                  </a>
-                )}
-              </Menu.Item>
-              <Menu.Item>
-                {({ active }) => (
-                  <a
-                    href="#"
-                    className={classNames(
-                      active ? "bg-gray-100 text-gray-900" : "text-gray-700",
-                      "flex px-4 py-2 text-sm"
-                    )}
-                  >
+                  ) : (
                     <div className="mr-2 h-5 w-5" aria-hidden="true"></div>
-                    ChoyShin
-                  </a>
-                )}
+                  )}
+                  Personal
+                </button>
               </Menu.Item>
+              {(otherUsers ?? []).map((user) => (
+                <Menu.Item key={user.ownerId}>
+                  <button
+                    className="flex w-full px-4 py-2 text-sm text-gray-700"
+                    onClick={partial(handleSelectUser, user.ownerId)}
+                  >
+                    {userSetting?.selectedUserId === user.ownerId ? (
+                      <CheckIcon className="mr-2 h-5 w-5" aria-hidden="true" />
+                    ) : (
+                      <div className="mr-2 h-5 w-5" aria-hidden="true"></div>
+                    )}
+                    {user.owner.name}
+                  </button>
+                </Menu.Item>
+              ))}
             </div>
             <div className="py-1">
               <Menu.Item>
-                {({ active }) => (
-                  <button
-                    className={classNames(
-                      active ? "bg-gray-100 text-gray-900" : "text-gray-700",
-                      "flex px-4 py-2 text-sm"
-                    )}
-                    onClick={openModal}
-                  >
-                    <UserPlusIcon className="mr-2 h-5 w-5" aria-hidden="true" />
-                    Add collaborator
-                  </button>
-                )}
+                <button
+                  className="flex px-4 py-2 text-sm text-gray-700"
+                  onClick={openModal}
+                >
+                  <UserPlusIcon className="mr-2 h-5 w-5" aria-hidden="true" />
+                  Add collaborator
+                </button>
               </Menu.Item>
             </div>
           </Menu.Items>

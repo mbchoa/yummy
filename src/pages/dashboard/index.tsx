@@ -12,34 +12,54 @@ import { trpc } from "../../utils/trpc";
 
 export default function Dashboard() {
   const { data: session } = useSession();
-  const { data: favoriteRestaurants, isLoading: isLoadingFavoriteRestaurants } =
-    trpc.favoriteRestaurant.all.useQuery(
-      { like: Like.LIKE },
-      { enabled: session !== undefined }
-    );
+  const {
+    data: favoriteRestaurants,
+    isLoading: isLoadingFavoriteRestaurants,
+    refetch: refetchFavoriteRestaurants,
+  } = trpc.favoriteRestaurant.all.useQuery(
+    { like: Like.LIKE },
+    { enabled: session !== undefined }
+  );
   const {
     data: likedYelpRestaurants,
     isLoading: isLoadingFavoriteYelpRestaurants,
+    refetch: refetchLikedYelpRestaurants,
   } = trpc.yelp.byIds.useQuery(
     (favoriteRestaurants ?? []).map(
       (favoriteRestaurant) => favoriteRestaurant.restaurantId
     ),
     { enabled: favoriteRestaurants !== undefined }
   );
-  const { data: dislikedRestaurants, isLoading: isLoadingDislikedRestaurants } =
-    trpc.favoriteRestaurant.all.useQuery(
-      { like: Like.DISLIKE },
-      { enabled: session !== undefined }
-    );
+  const {
+    data: dislikedRestaurants,
+    isLoading: isLoadingDislikedRestaurants,
+    refetch: refetchDislikedRestaurants,
+  } = trpc.favoriteRestaurant.all.useQuery(
+    { like: Like.DISLIKE },
+    { enabled: session !== undefined }
+  );
   const {
     data: dislikedYelpRestaurants,
     isLoading: isLoadingDislikedYelpRestaurants,
+    refetch: refetchDislikedYelpRestaurants,
   } = trpc.yelp.byIds.useQuery(
     (dislikedRestaurants ?? []).map(
       (dislikedRestaurant) => dislikedRestaurant.restaurantId
     ),
     { enabled: dislikedRestaurants !== undefined }
   );
+
+  const refetch = useCallback(async () => {
+    await refetchFavoriteRestaurants();
+    await refetchLikedYelpRestaurants();
+    await refetchDislikedRestaurants();
+    await refetchDislikedYelpRestaurants();
+  }, [
+    refetchDislikedRestaurants,
+    refetchDislikedYelpRestaurants,
+    refetchFavoriteRestaurants,
+    refetchLikedYelpRestaurants,
+  ]);
 
   const data = useMemo(() => {
     return {
@@ -112,7 +132,7 @@ export default function Dashboard() {
                 </Tab>
               ))}
             </Tab.List>
-            <ListDropDown />
+            <ListDropDown refetch={refetch} />
           </div>
           <Tab.Panels className="mt-4">{maybeRenderPanels()}</Tab.Panels>
         </Tab.Group>

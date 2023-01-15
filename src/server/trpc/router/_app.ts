@@ -3,6 +3,7 @@ import { collaborator } from "./collaborator";
 import { favoriteRestaurant } from "./favoriteRestaurant";
 import { foodReview } from "./foodReview";
 import { user } from "./user";
+import { userSetting } from "./userSetting";
 import { yelp } from "./yelp";
 
 export const appRouter = router({
@@ -10,6 +11,7 @@ export const appRouter = router({
   favoriteRestaurant,
   foodReview,
   user,
+  userSetting,
   yelp,
 });
 
