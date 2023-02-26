@@ -26,7 +26,7 @@ export const AddCollaboratorModal = ({
     }
   );
   const { data: allCollaborators, refetch: refetchCollaborators } =
-    trpc.collaborator.all.useQuery();
+    trpc.collaborator.allOwner.useQuery();
   const { mutateAsync: addCollaborator, isLoading: isAddingCollaborator } =
     trpc.collaborator.add.useMutation();
   const handleChange = useCallback(

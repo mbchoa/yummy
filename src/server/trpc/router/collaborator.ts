@@ -2,13 +2,24 @@ import { z } from "zod";
 import { protectedProcedure, router } from "../trpc";
 
 export const collaborator = router({
-  all: protectedProcedure.query(({ ctx }) => {
+  allOwner: protectedProcedure.query(({ ctx }) => {
     return ctx.prisma.collaborator.findMany({
       where: {
         collaboratorId: ctx.session.user.id,
       },
       include: {
         owner: true,
+        collaborator: true,
+      },
+    });
+  }),
+  all: protectedProcedure.query(({ ctx }) => {
+    return ctx.prisma.collaborator.findMany({
+      where: {
+        ownerId: ctx.session.user.id,
+      },
+      include: {
+        collaborator: true,
       },
     });
   }),

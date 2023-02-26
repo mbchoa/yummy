@@ -2,13 +2,16 @@ import { Menu, Transition } from "@headlessui/react";
 import {
   CheckIcon,
   ChevronDownIcon,
+  UserIcon,
   UserPlusIcon,
 } from "@heroicons/react/24/outline";
 import { partial } from "lodash-es";
 import { useSession } from "next-auth/react";
+import Image from "next/image";
 import { Fragment, useCallback, useState } from "react";
 import { trpc } from "../../../utils/trpc";
 import { AddCollaboratorModal } from "../../addCollaboratorModal";
+
 interface IListDropDownProps {
   refetch: () => Promise<void>;
 }
@@ -24,7 +27,8 @@ export const ListDropDown = ({ refetch }: IListDropDownProps) => {
   }, []);
   const { data: session } = useSession();
   const { data: userSetting } = trpc.userSetting.get.useQuery();
-  const { data: otherUsers } = trpc.collaborator.all.useQuery();
+  const { data: otherUsers } = trpc.collaborator.allOwner.useQuery();
+  const { data: currentListCollaborators } = trpc.collaborator.all.useQuery();
   const { mutateAsync: switchUser } = trpc.userSetting.switchUser.useMutation();
 
   const handleSelectUser = useCallback(
@@ -89,6 +93,34 @@ export const ListDropDown = ({ refetch }: IListDropDownProps) => {
                     )}
                     {user.owner.name}
                   </button>
+                </Menu.Item>
+              ))}
+            </div>
+            <div className="space-y-3 py-2">
+              <div className="px-4">
+                <p className="text-xs font-semibold text-gray-500">
+                  COLLABORATORS
+                </p>
+              </div>
+              {(currentListCollaborators ?? []).map((user) => (
+                <Menu.Item key={user.collaboratorId}>
+                  <div className="flex w-full items-center gap-2 px-4 text-sm text-gray-700">
+                    {user.collaborator.image === null ? (
+                      <UserIcon
+                        className="inline-block h-6 w-6 rounded-full stroke-gray-300"
+                        aria-hidden
+                      />
+                    ) : (
+                      <Image
+                        className="inline-block h-6 w-6 rounded-full"
+                        src={user.collaborator.image}
+                        alt="Profile image"
+                        width={20}
+                        height={20}
+                      />
+                    )}
+                    {user.collaborator.name}
+                  </div>
                 </Menu.Item>
               ))}
             </div>
