@@ -132,7 +132,7 @@ export default function Dashboard() {
                 </Tab>
               ))}
             </Tab.List>
-            <ListDropDown refetch={refetch} />
+            <ListDropDown onSwitchUser={refetch} />
           </div>
           <Tab.Panels className="mt-4">{maybeRenderPanels()}</Tab.Panels>
         </Tab.Group>

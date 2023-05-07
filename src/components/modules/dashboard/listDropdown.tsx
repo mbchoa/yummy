@@ -13,10 +13,10 @@ import { trpc } from "../../../utils/trpc";
 import { AddCollaboratorModal } from "../../addCollaboratorModal";
 
 interface IListDropDownProps {
-  refetch: () => Promise<void>;
+  onSwitchUser: () => Promise<void>;
 }
 
-export const ListDropDown = ({ refetch }: IListDropDownProps) => {
+export const ListDropDown = ({ onSwitchUser }: IListDropDownProps) => {
   const [isAddCollaboratorModalOpen, setIsAddCollaboratorModalOpen] =
     useState(false);
   const closeModal = useCallback(() => {
@@ -26,7 +26,8 @@ export const ListDropDown = ({ refetch }: IListDropDownProps) => {
     setIsAddCollaboratorModalOpen(true);
   }, []);
   const { data: session } = useSession();
-  const { data: userSetting } = trpc.userSetting.get.useQuery();
+  const { data: userSetting, refetch: refetchUserSetting } =
+    trpc.userSetting.get.useQuery();
   const { data: otherUsers } = trpc.collaborator.allOwner.useQuery();
   const { data: currentListCollaborators } = trpc.collaborator.all.useQuery();
   const { mutateAsync: switchUser } = trpc.userSetting.switchUser.useMutation();
@@ -38,9 +39,10 @@ export const ListDropDown = ({ refetch }: IListDropDownProps) => {
       }
 
       await switchUser({ userId });
-      refetch();
+      onSwitchUser();
+      refetchUserSetting();
     },
-    [switchUser, refetch]
+    [switchUser, onSwitchUser, refetchUserSetting]
   );
 
   return (
@@ -98,8 +100,8 @@ export const ListDropDown = ({ refetch }: IListDropDownProps) => {
             </div>
             <div className="space-y-3 py-2">
               <div className="px-4">
-                <p className="text-xs font-semibold text-gray-500">
-                  COLLABORATORS
+                <p className="text-xs font-semibold uppercase text-gray-500">
+                  Collaborators
                 </p>
               </div>
               {(currentListCollaborators ?? []).map((user) => (
