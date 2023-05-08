@@ -15,7 +15,6 @@ export default createNextApiHandler({
         }
       : undefined,
   responseMeta(opts) {
-    debugger;
     const { paths, errors, type } = opts;
     // assuming you have all your public routes with the keyword `public` in them
     const allPublic = paths && paths.every((path) => path.includes("yelp"));
