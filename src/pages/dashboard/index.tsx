@@ -18,7 +18,7 @@ export default function Dashboard() {
     refetch: refetchFavoriteRestaurants,
   } = trpc.favoriteRestaurant.all.useQuery(
     { like: Like.LIKE },
-    { enabled: session !== undefined }
+    { enabled: session !== undefined, keepPreviousData: true }
   );
   const {
     data: likedYelpRestaurants,
@@ -28,7 +28,7 @@ export default function Dashboard() {
     (favoriteRestaurants ?? []).map(
       (favoriteRestaurant) => favoriteRestaurant.restaurantId
     ),
-    { enabled: favoriteRestaurants !== undefined }
+    { enabled: favoriteRestaurants !== undefined, keepPreviousData: true }
   );
   const {
     data: dislikedRestaurants,
@@ -36,7 +36,7 @@ export default function Dashboard() {
     refetch: refetchDislikedRestaurants,
   } = trpc.favoriteRestaurant.all.useQuery(
     { like: Like.DISLIKE },
-    { enabled: session !== undefined }
+    { enabled: session !== undefined, keepPreviousData: true }
   );
   const {
     data: dislikedYelpRestaurants,
@@ -46,7 +46,7 @@ export default function Dashboard() {
     (dislikedRestaurants ?? []).map(
       (dislikedRestaurant) => dislikedRestaurant.restaurantId
     ),
-    { enabled: dislikedRestaurants !== undefined }
+    { enabled: dislikedRestaurants !== undefined, keepPreviousData: true }
   );
 
   const refetch = useCallback(async () => {
