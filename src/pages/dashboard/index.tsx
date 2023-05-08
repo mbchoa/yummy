@@ -155,5 +155,14 @@ const groupRestaurantsByCity = (
     }
   });
 
+  // sort restaurants within each city
+  Object.keys(restaurantsGroupedByCity).forEach((city) => {
+    if (restaurantsGroupedByCity[city] !== undefined) {
+      restaurantsGroupedByCity[city]?.sort((a, b) =>
+        a.name.localeCompare(b.name)
+      );
+    }
+  });
+
   return restaurantsGroupedByCity;
 };
