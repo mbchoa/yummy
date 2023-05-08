@@ -28,7 +28,15 @@ export default function Dashboard() {
     (favoriteRestaurants ?? []).map(
       (favoriteRestaurant) => favoriteRestaurant.restaurantId
     ),
-    { enabled: favoriteRestaurants !== undefined, keepPreviousData: true }
+    {
+      enabled: favoriteRestaurants !== undefined,
+      keepPreviousData: true,
+      trpc: {
+        context: {
+          skipBatch: true,
+        },
+      },
+    }
   );
   const {
     data: dislikedRestaurants,
@@ -46,7 +54,15 @@ export default function Dashboard() {
     (dislikedRestaurants ?? []).map(
       (dislikedRestaurant) => dislikedRestaurant.restaurantId
     ),
-    { enabled: dislikedRestaurants !== undefined, keepPreviousData: true }
+    {
+      enabled: dislikedRestaurants !== undefined,
+      keepPreviousData: true,
+      trpc: {
+        context: {
+          skipBatch: true,
+        },
+      },
+    }
   );
 
   const refetch = useCallback(async () => {

@@ -9,7 +9,15 @@ interface IYelpReviewsProps {
 export const YelpReviews = ({ restaurantId }: IYelpReviewsProps) => {
   const { data: yelpReviews, isLoading } = trpc.yelp.reviews.useQuery(
     { id: restaurantId },
-    { enabled: restaurantId !== undefined, refetchOnWindowFocus: false }
+    {
+      enabled: restaurantId !== undefined,
+      refetchOnWindowFocus: false,
+      trpc: {
+        context: {
+          skipBatch: true,
+        },
+      },
+    }
   );
 
   if (isLoading) {

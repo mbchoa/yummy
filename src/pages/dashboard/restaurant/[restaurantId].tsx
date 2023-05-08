@@ -29,7 +29,15 @@ export default function RestaurantById() {
   const { data: restaurant, isLoading: isLoadingYelpRestaurant } =
     trpc.yelp.byId.useQuery(
       { id: restaurantId },
-      { enabled: restaurantId !== undefined, refetchOnWindowFocus: false }
+      {
+        enabled: restaurantId !== undefined,
+        refetchOnWindowFocus: false,
+        trpc: {
+          context: {
+            skipBatch: true,
+          },
+        },
+      }
     );
   const {
     data: savedRestaurant,

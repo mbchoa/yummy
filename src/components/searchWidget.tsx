@@ -14,7 +14,14 @@ export const SearchWidget = () => {
       location,
       term: searchTerm,
     },
-    { enabled: false }
+    {
+      enabled: false,
+      trpc: {
+        context: {
+          skipBatch: true,
+        },
+      },
+    }
   );
 
   useEffect(() => {
