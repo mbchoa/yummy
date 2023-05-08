@@ -152,7 +152,7 @@ export const AddCollaboratorModal = ({
                   <div className="flex-1">
                     <input
                       type="text"
-                      className="w-full rounded text-sm"
+                      className="w-full rounded text-sm outline-indigo-500"
                       name="collaborator"
                       value={search}
                       onChange={handleChange}

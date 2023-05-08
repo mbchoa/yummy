@@ -1,7 +1,6 @@
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
+import Link from "next/link";
 import type { IYelpBusinessSchema } from "../../../models/YelpSchemas";
-import { Button } from "../../button";
-import { NextLinkRenderer } from "../../nextLinkRenderer";
 
 interface IRestaurantsListProps {
   isLoading: boolean;
@@ -57,17 +56,15 @@ export const RestaurantsList = ({
               {(restaurants?.[city] ?? []).map((restaurant) => {
                 return (
                   <li key={restaurant.id}>
-                    <Button
-                      variant="ghost"
-                      linkRenderer={NextLinkRenderer({
-                        href: {
-                          pathname: `/dashboard/restaurant/[restaurantId]`,
-                          query: { restaurantId: restaurant.id },
-                        },
-                      })}
+                    <Link
+                      className="inline-flex h-min items-center rounded-md border border-transparent py-2 text-sm font-medium text-indigo-600 focus:outline-none"
+                      href={{
+                        pathname: `/dashboard/restaurant/[restaurantId]`,
+                        query: { restaurantId: restaurant.id },
+                      }}
                     >
                       {restaurant.name}
-                    </Button>
+                    </Link>
                   </li>
                 );
               })}

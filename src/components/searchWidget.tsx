@@ -38,10 +38,13 @@ export const SearchWidget = () => {
     }
 
     return (
-      <ul className="absolute top-full left-0 right-0 space-y-4 bg-white p-4 drop-shadow-xl">
+      <ul className="absolute top-full left-0 right-0 overflow-hidden rounded-b-lg bg-white drop-shadow-xl">
         {data.businesses.map((business) => {
           return (
-            <li key={business.id}>
+            <li
+              key={business.id}
+              className="cursor-pointer py-2 px-4 transition-colors hover:bg-indigo-200"
+            >
               <Link
                 href={{
                   pathname: "/dashboard/restaurant/[restaurantId]",
@@ -80,9 +83,9 @@ export const SearchWidget = () => {
   });
 
   return (
-    <div className="sticky p-4" onFocus={handleFocusChange} ref={ref}>
+    <div className="sticky z-search p-4" onFocus={handleFocusChange} ref={ref}>
       <input
-        className="w-full rounded border px-3 py-2"
+        className="w-full rounded border px-3 py-2 outline-indigo-500"
         value={searchTerm}
         onChange={handleSearchChange}
         placeholder="In 'N Out"
@@ -90,7 +93,7 @@ export const SearchWidget = () => {
       />
       {isLocationInputEnabled && (
         <input
-          className="mt-4 w-full rounded border px-3 py-2"
+          className="mt-4 w-full rounded border px-3 py-2 outline-indigo-500"
           value={location}
           onChange={handleLocationChange}
           name="location"
