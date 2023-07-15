@@ -10,7 +10,9 @@
     "start": "next start",
     "db:ui": "prisma studio",
     "tsc": "tsc --noEmit",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "db:deploy": "prisma migrate deploy",
+    "db:generate": "prisma generate"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.14",
