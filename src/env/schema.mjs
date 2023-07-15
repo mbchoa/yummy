@@ -23,6 +23,8 @@ export const serverSchema = z.object({
   AUTH0_CLIENT_SECRET: z.string(),
   AUTH0_ISSUER: z.string(),
   YELP_API_KEY: z.string(),
+  UPSTASH_REDIS_REST_URL: z.string(),
+  UPSTASH_REDIS_REST_TOKEN: z.string(),
 });
 
 /**

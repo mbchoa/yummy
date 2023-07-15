@@ -1,14 +1,20 @@
+import { Redis } from "@upstash/redis";
 import got from "got";
 import qs from "querystring";
 import { z } from "zod";
+import { env } from "../../../env/server.mjs";
 import { camelCaseKeys } from "../../../lib/camelCaseKeys";
 import type {
   IYelpBusinessReviewsResponseSchema,
-  IYelpBusinessSchema,
   IYelpBusinessSearchResponseSchema,
 } from "../../../models/YelpSchemas";
-
 import { publicProcedure, router } from "../trpc";
+import { getYelpRestaurantById } from "./helpers/getYelpRestaurantById";
+
+const redis = new Redis({
+  url: env.UPSTASH_REDIS_REST_URL,
+  token: env.UPSTASH_REDIS_REST_TOKEN,
+});
 
 export const yelp = router({
   search: publicProcedure
@@ -38,33 +44,13 @@ export const yelp = router({
   byId: publicProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ input }) => {
-      const response = await got(
-        `https://api.yelp.com/v3/businesses/${input.id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.YELP_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-        }
-      ).json<IYelpBusinessSchema>();
-      return camelCaseKeys<IYelpBusinessSchema>(response);
+      return getYelpRestaurantById(input.id, redis);
     }),
   byIds: publicProcedure
     .input(z.array(z.string()))
     .query(async ({ input: restaurantIds }) => {
       return Promise.all(
-        restaurantIds.map((id) =>
-          got(`https://api.yelp.com/v3/businesses/${id}`, {
-            headers: {
-              Authorization: `Bearer ${process.env.YELP_API_KEY}`,
-              "Content-Type": "application/json",
-            },
-          }).json<IYelpBusinessSchema>()
-        )
-      ).then((jsonResponses) =>
-        jsonResponses.map((json) => {
-          return camelCaseKeys<IYelpBusinessSchema>(json);
-        })
+        restaurantIds.map((id) => getYelpRestaurantById(id, redis))
       );
     }),
   reviews: publicProcedure
