@@ -158,13 +158,13 @@ export default function RestaurantById() {
   const maybeRenderBody = useCallback(() => {
     return (
       <>
-        <div className="space-y-4 p-4">
+        <div className="p-4">
           <div className="grid grid-cols-4 grid-rows-2 gap-2">
             <header className="col-span-full row-start-1 space-y-4">
               {isLoadingYelpRestaurant || restaurant === undefined ? (
                 <div className="h-8 w-48 animate-pulse rounded bg-gray-300" />
               ) : (
-                <h1 className="semi text-2xl">{restaurant.name}</h1>
+                <h1 className="semi text-2xl font-medium">{restaurant.name}</h1>
               )}
             </header>
             <address className="col-span-2 row-start-2 not-italic">
@@ -224,16 +224,12 @@ export default function RestaurantById() {
               />
             </div>
           </div>
-          <hr className="bg-gray-300" />
-          <div className="space-y-8">
-            {like !== Like.UNSELECTED && (
-              <FavoriteFoods
-                openModal={openModal}
-                restaurantId={restaurantId}
-              />
-            )}
-            <YelpReviews restaurantId={restaurantId} />
-          </div>
+          <hr className="my-6" />
+          {like !== Like.UNSELECTED && (
+            <FavoriteFoods openModal={openModal} restaurantId={restaurantId} />
+          )}
+          <hr className="my-8" />
+          <YelpReviews restaurantId={restaurantId} />
         </div>
         <AddReviewModal
           isOpen={isAddReviewModalOpen}

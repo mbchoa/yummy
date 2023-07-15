@@ -179,7 +179,7 @@ export const FavoriteFoods = ({
   return (
     <section className="space-y-4">
       <header className="flex justify-between">
-        <h2 className="semi-bold text-xl">Personal Reviews</h2>
+        <h2 className="semi-bold text-xl font-medium">Personal Reviews</h2>
         <Button size="sm" onClick={openModal}>
           Add
         </Button>
