@@ -16,7 +16,10 @@ export const AddReviewModal = ({
   restaurantId,
 }: IAddReviewModalProps) => {
   const [name, setName] = useState("");
-  const { refetch } = trpc.foodReview.all.useQuery({ restaurantId });
+  const { refetch } = trpc.foodReview.all.useQuery(
+    { restaurantId },
+    { enabled: !!restaurantId }
+  );
   const { mutateAsync: addFoodReview } = trpc.foodReview.add.useMutation();
   const handleChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {

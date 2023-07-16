@@ -21,15 +21,15 @@ export const FavoriteFoods = ({
   const { data: favoriteRestaurant, isLoading: isFavoriteRestaurantLoading } =
     trpc.favoriteRestaurant.byId.useQuery(
       { id: restaurantId },
-      { enabled: restaurantId !== undefined }
+      { enabled: !!restaurantId }
     );
   const {
     data: foodReviews,
     isLoading: isFoodReviewsLoading,
     refetch: refetchFoodReviews,
   } = trpc.foodReview.all.useQuery(
-    { restaurantId },
-    { enabled: favoriteRestaurant !== undefined }
+    { restaurantId: restaurantId },
+    { enabled: !!restaurantId }
   );
   const isLoading = isFavoriteRestaurantLoading || isFoodReviewsLoading;
   const { mutateAsync: updateFoodReview } =
