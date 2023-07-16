@@ -56,6 +56,14 @@ export const yelp = router({
   reviews: publicProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ input }) => {
+      const cacheKey = `yelpBusinessReviews:${input.id}`;
+      const cached = await redis.get<
+        SnakeToCamelCaseNested<IYelpBusinessReviewsResponseSchema>
+      >(cacheKey);
+      if (cached) {
+        return cached;
+      }
+
       const response = await got(
         `https://api.yelp.com/v3/businesses/${input.id}/reviews?sort_by=newest`,
         {
@@ -65,6 +73,14 @@ export const yelp = router({
           },
         }
       ).json<IYelpBusinessReviewsResponseSchema>();
-      return camelCaseKeys<IYelpBusinessReviewsResponseSchema>(response);
+      const formattedResponse =
+        camelCaseKeys<IYelpBusinessReviewsResponseSchema>(response);
+
+      await redis.set(
+        cacheKey,
+        formattedResponse,
+        { ex: 60 * 60 * 24 * 7 } // cache reviews for 1 week
+      );
+      return formattedResponse;
     }),
 });

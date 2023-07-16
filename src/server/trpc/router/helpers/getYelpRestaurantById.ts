@@ -19,7 +19,6 @@ export const getYelpRestaurantById = async (id: string, redis: Redis) => {
     },
   }).json<IYelpBusinessSchema>();
   const formattedResponse = camelCaseKeys<IYelpBusinessSchema>(response);
-  await redis.set(cacheKey, formattedResponse);
-  await redis.expire(cacheKey, 60 * 60 * 24 * 30); // cache restaurant info for 30 days
+  await redis.set(cacheKey, formattedResponse, { ex: 60 * 60 * 24 * 30 }); // cache restaurant info for 30 days
   return formattedResponse;
 };
