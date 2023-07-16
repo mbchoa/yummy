@@ -48,12 +48,12 @@ export const YelpReviews = ({ restaurantId }: IYelpReviewsProps) => {
     }
 
     return yelpReviews.reviews.map((review) => (
-      <li key={review.id} className="space-y-2">
-        <div className="flex items-center space-x-2 rounded-full">
-          <div className="relative h-12 w-12 overflow-hidden rounded-full">
+      <li key={review.id} className="grid grid-cols-4 sm:grid sm:grid-cols-12">
+        <div className="inline-flex w-min flex-col gap-2 rounded-full">
+          <div className="relative h-14 w-14 overflow-hidden rounded">
             {review.user.imageUrl === undefined ||
             review.user.imageUrl === null ? (
-              <div className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-slate-600">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-slate-600">
                 <UserIcon className="block h-6 w-6 " aria-hidden />
               </div>
             ) : (
@@ -68,9 +68,11 @@ export const YelpReviews = ({ restaurantId }: IYelpReviewsProps) => {
               />
             )}
           </div>
-          <p className="semi-bold">{review.user.name}</p>
+          <p className="semi-bold text-center text-xs">{review.user.name}</p>
         </div>
-        <p>{review.text}</p>
+        <p className="col-span-full col-start-2 text-sm leading-snug sm:col-start-3 sm:col-end-11 sm:text-base">
+          {review.text}
+        </p>
       </li>
     ));
   };
