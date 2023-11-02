@@ -520,7 +520,7 @@ packages:
   /@trpc-playground/html@1.0.0-next.0:
     resolution: {integrity: sha512-kXivzKW4xBppEYT9TkUBShrwlyhJCCJ69jMFHFoRtHvqfCJqX0rNMNoXwW2rIa915U4L9wBxuO9A1FdrmnfNQA==}
     dependencies:
-      vite: 2.9.15
+      vite: 2.9.16
       xss: 1.0.14
     transitivePeerDependencies:
       - less
@@ -3646,8 +3646,8 @@ packages:
     resolution: {integrity: sha512-wa7YjyUGfNZngI/vtK0UHAN+lgDCxBPCylVXGp0zu59Fz5aiGtNXaq3DhIov063MorB+VfufLh3JlF2KdTK3xg==}
     dev: true
 
-  /vite@2.9.15:
-    resolution: {integrity: sha512-fzMt2jK4vQ3yK56te3Kqpkaeq9DkcZfBbzHwYpobasvgYmP2SoAr6Aic05CsB4CzCZbsDv4sujX3pkEGhLabVQ==}
+  /vite@2.9.16:
+    resolution: {integrity: sha512-X+6q8KPyeuBvTQV8AVSnKDvXoBMnTx8zxh54sOwmmuOdxkjMmEJXH2UEchA+vTMps1xw9vL64uwJOWryULg7nA==}
     engines: {node: '>=12.2.0'}
     hasBin: true
     peerDependencies:
