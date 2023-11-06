@@ -66,8 +66,8 @@ dependencies:
     specifier: 1.9.1
     version: 1.9.1
   zod:
-    specifier: ^3.21.4
-    version: 3.21.4
+    specifier: ^3.22.4
+    version: 3.22.4
 
 devDependencies:
   '@tailwindcss/forms':
@@ -120,7 +120,7 @@ devDependencies:
     version: 3.3.3(ts-node@10.9.1)
   trpc-playground:
     specifier: 1.0.0-next.0
-    version: 1.0.0-next.0(@trpc/server@10.25.0)(typescript@4.9.5)(zod@3.21.4)
+    version: 1.0.0-next.0(@trpc/server@10.25.0)(typescript@4.9.5)(zod@3.22.4)
   ts-node:
     specifier: ^10.9.1
     version: 10.9.1(@types/node@18.16.5)(typescript@4.9.5)
@@ -3457,7 +3457,7 @@ packages:
     resolution: {integrity: sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw==}
     dev: false
 
-  /trpc-playground@1.0.0-next.0(@trpc/server@10.25.0)(typescript@4.9.5)(zod@3.21.4):
+  /trpc-playground@1.0.0-next.0(@trpc/server@10.25.0)(typescript@4.9.5)(zod@3.22.4):
     resolution: {integrity: sha512-zhuX1fW7UD126scCtzZwLU+hjxGi9L23RkojjMnw0hdUhLW3G7hjf1bCwdBcRCFILZPkaF3aHRHHfj8curXgMA==}
     peerDependencies:
       '@trpc/server': ^10
@@ -3468,8 +3468,8 @@ packages:
       '@trpc/server': 10.25.0
       lodash: 4.17.21
       uttp: 0.1.3
-      zod: 3.21.4
-      zod-to-ts: 0.2.2(typescript@4.9.5)(zod@3.21.4)
+      zod: 3.22.4
+      zod-to-ts: 0.2.2(typescript@4.9.5)(zod@3.22.4)
     transitivePeerDependencies:
       - express
       - fastify
@@ -3760,15 +3760,15 @@ packages:
     engines: {node: '>=10'}
     dev: true
 
-  /zod-to-ts@0.2.2(typescript@4.9.5)(zod@3.21.4):
+  /zod-to-ts@0.2.2(typescript@4.9.5)(zod@3.22.4):
     resolution: {integrity: sha512-ardXRu0EIDcS8pP0+1jL5a4ZtPIfxhmWHjwYH7Mol38/D3OUqgo+QjK648+R6T7N0RkfSNOSI1AkddKILetLKQ==}
     peerDependencies:
       typescript: ^4
       zod: ^3
     dependencies:
       typescript: 4.9.5
-      zod: 3.21.4
+      zod: 3.22.4
     dev: true
 
-  /zod@3.21.4:
-    resolution: {integrity: sha512-m46AKbrzKVzOzs/DZgVnG5H55N1sv1M8qZU3A8RIKbs3mrACDNeIOeilDymVb2HdmP8uwshOCF4uJ8uM9rCqJw==}
+  /zod@3.22.4:
+    resolution: {integrity: sha512-iC+8Io04lddc+mVqQ9AZ7OQ2MrUKGN+oIQyq1vemgt46jwCwLfhq7/pwnBnNXXXZb8VTVLKwp9EDkx+ryxIWmg==}
