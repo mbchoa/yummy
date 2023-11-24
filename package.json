@@ -60,5 +60,11 @@
   },
   "ct3aMetadata": {
     "initVersion": "6.10.2"
+  },
+  "nextBundleAnalysis": {
+    "budget": null,
+    "budgetPercentIncreaseRed": 20,
+    "minimumChangeThreshold": 0,
+    "showDetails": true
   }
 }
