@@ -33,5 +33,8 @@
     "**/node_modules/*/**": true
   },
   "eslint.alwaysShowStatus": true,
-  "githubPullRequests.ignoredPullRequestBranches": ["main"]
+  "githubPullRequests.ignoredPullRequestBranches": ["main"],
+  "[properties]": {
+    "editor.defaultFormatter": "foxundermoon.shell-format"
+  }
 }
