@@ -4,7 +4,6 @@
  * This is especially useful for Docker builds.
  */
 import createNextRouteConfig from "nextjs-routes/config";
-!process.env.SKIP_ENV_VALIDATION && (await import("./src/env/server.mjs"));
 
 const withRoutes = createNextRouteConfig();
 
