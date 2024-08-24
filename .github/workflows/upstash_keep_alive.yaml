@@ -1,6 +1,7 @@
 name: Upstash Keep Alive
 
 on:
+  workflow_dispatch:
   schedule:
     # Run at 12:00 UTC every day
     - cron: '0 12 * * *'
