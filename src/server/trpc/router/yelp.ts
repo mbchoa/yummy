@@ -1,20 +1,17 @@
-import { Redis } from "@upstash/redis";
 import got from "got";
+import Redis from "ioredis";
 import qs from "querystring";
 import { z } from "zod";
 import { env } from "../../../env/server.mjs";
 import { camelCaseKeys } from "../../../lib/camelCaseKeys";
-import type {
-  IYelpBusinessReviewsResponseSchema,
-  IYelpBusinessSearchResponseSchema,
+import {
+  type IYelpBusinessReviewsResponseSchema,
+  type IYelpBusinessSearchResponseSchema
 } from "../../../models/YelpSchemas";
 import { publicProcedure, router } from "../trpc";
 import { getYelpRestaurantById } from "./helpers/getYelpRestaurantById";
 
-const redis = new Redis({
-  url: env.UPSTASH_REDIS_REST_URL,
-  token: env.UPSTASH_REDIS_REST_TOKEN,
-});
+const redis = new Redis(env.RAILWAY_REDIS_URL);
 
 export const yelp = router({
   search: publicProcedure
@@ -57,11 +54,9 @@ export const yelp = router({
     .input(z.object({ id: z.string() }))
     .query(async ({ input }) => {
       const cacheKey = `yelpBusinessReviews:${input.id}`;
-      const cached = await redis.get<
-        SnakeToCamelCaseNested<IYelpBusinessReviewsResponseSchema>
-      >(cacheKey);
+      const cached = await redis.get(cacheKey);
       if (cached) {
-        return cached;
+        return JSON.parse(cached) as SnakeToCamelCaseNested<IYelpBusinessReviewsResponseSchema>;
       }
 
       const response = await got(
@@ -78,8 +73,9 @@ export const yelp = router({
 
       await redis.set(
         cacheKey,
-        formattedResponse,
-        { ex: 60 * 60 * 24 * 7 } // cache reviews for 1 week
+        JSON.stringify(formattedResponse),
+        "EX",
+        60 * 60 * 24 * 7 // cache reviews for 1 week
       );
       return formattedResponse;
     }),

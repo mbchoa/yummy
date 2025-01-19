@@ -27,6 +27,7 @@
     "@upstash/redis": "^1.22.0",
     "classnames": "^2.3.2",
     "got": "^12.6.0",
+    "ioredis": "^5.4.2",
     "lodash-es": "^4.17.21",
     "next": "13.0.2",
     "next-auth": "^4.24.5",
