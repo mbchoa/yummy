@@ -1,3 +1,4 @@
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { protectedProcedure, router } from "../trpc";
 
@@ -43,11 +44,19 @@ export const collaborator = router({
         id: z.string(),
       })
     )
-    .mutation(({ input, ctx }) => {
-      return ctx.prisma.collaborator.delete({
+    .mutation(async ({ input, ctx }) => {
+      const { count } = await ctx.prisma.collaborator.deleteMany({
         where: {
           id: input.id,
+          ownerId: ctx.session.user.id,
         },
       });
+
+      if (count === 0) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Collaborator not found",
+        });
+      }
     }),
 });

@@ -62,26 +62,18 @@ export default function RestaurantById() {
   const [like, setLike] = useState<Like>(Like.UNSELECTED);
 
   useEffect(() => {
-    if (savedRestaurant !== undefined) {
+    if (savedRestaurant) {
       setLike(savedRestaurant.like);
     }
   }, [savedRestaurant]);
 
   const handleDislikeClick = useCallback(async () => {
-    if (savedRestaurant === undefined) {
-      await addRestaurant({
-        id: restaurantId,
-        like: Like.DISLIKE,
-      });
-      setLike(Like.DISLIKE);
-      return;
-    }
-
     if (like === Like.UNSELECTED) {
       await addRestaurant({
         id: restaurantId,
         like: Like.DISLIKE,
       });
+      await refetch();
       setLike(Like.DISLIKE);
       return;
     }
@@ -106,25 +98,16 @@ export default function RestaurantById() {
     refetch,
     removeRestaurant,
     restaurantId,
-    savedRestaurant,
     updateRestaurant,
   ]);
 
   const handleFavoriteClick = useCallback(async () => {
-    if (savedRestaurant === undefined) {
-      await addRestaurant({
-        id: restaurantId,
-        like: Like.LIKE,
-      });
-      setLike(Like.LIKE);
-      return;
-    }
-
     if (like === Like.UNSELECTED) {
       await addRestaurant({
         id: restaurantId,
         like: Like.LIKE,
       });
+      await refetch();
       setLike(Like.LIKE);
       return;
     }
@@ -149,7 +132,6 @@ export default function RestaurantById() {
     refetch,
     removeRestaurant,
     restaurantId,
-    savedRestaurant,
     updateRestaurant,
   ]);
 
@@ -164,7 +146,7 @@ export default function RestaurantById() {
               {isLoadingYelpRestaurant || restaurant === undefined ? (
                 <div className="h-8 w-48 animate-pulse rounded bg-gray-300" />
               ) : (
-                <h1 className="semi text-2xl font-medium">{restaurant.name}</h1>
+                <h1 className="text-2xl font-medium">{restaurant.name}</h1>
               )}
             </header>
             <address className="col-span-2 row-start-2 not-italic">

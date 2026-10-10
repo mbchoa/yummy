@@ -1,3 +1,4 @@
+import type { PrismaClient } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { protectedProcedure, router } from "../trpc";
@@ -95,7 +96,11 @@ export const foodReview = router({
             restaurantItem: {
               connectOrCreate: {
                 where: {
-                  name: input.name,
+                  name_restaurantId_userId: {
+                    name: input.name,
+                    restaurantId: input.restaurantId,
+                    userId: ctx.session.user.id,
+                  },
                 },
                 create: {
                   name: input.name,
@@ -143,7 +148,11 @@ export const foodReview = router({
           restaurantItem: {
             connectOrCreate: {
               where: {
-                name: input.name,
+                name_restaurantId_userId: {
+                  name: input.name,
+                  restaurantId: input.restaurantId,
+                  userId: selectedUserId,
+                },
               },
               create: {
                 name: input.name,
@@ -174,6 +183,7 @@ export const foodReview = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
+      await assertCanEditFoodReview(ctx.prisma, ctx.session.user.id, input.id);
       return ctx.prisma.restaurantItemReview.update({
         where: {
           id: input.id,
@@ -185,7 +195,8 @@ export const foodReview = router({
     }),
   remove: protectedProcedure
     .input(z.object({ id: z.string() }))
-    .mutation(({ input, ctx }) => {
+    .mutation(async ({ input, ctx }) => {
+      await assertCanEditFoodReview(ctx.prisma, ctx.session.user.id, input.id);
       return ctx.prisma.restaurantItemReview.delete({
         where: {
           id: input.id,
@@ -193,3 +204,52 @@ export const foodReview = router({
       });
     }),
 });
+
+// a food review can be edited by the owner of the list it belongs to, or by
+// one of that owner's collaborators
+const assertCanEditFoodReview = async (
+  prisma: PrismaClient,
+  userId: string,
+  foodReviewId: string
+) => {
+  const foodReview = await prisma.restaurantItemReview.findUnique({
+    where: {
+      id: foodReviewId,
+    },
+    include: {
+      restaurantItem: {
+        select: {
+          userId: true,
+        },
+      },
+    },
+  });
+
+  if (foodReview === null) {
+    throw new TRPCError({
+      code: "NOT_FOUND",
+      message: "Food review not found",
+    });
+  }
+
+  const ownerId = foodReview.restaurantItem.userId;
+  if (ownerId === userId) {
+    return;
+  }
+
+  const collaborator = await prisma.collaborator.findUnique({
+    where: {
+      collaboratorId_ownerId: {
+        collaboratorId: userId,
+        ownerId,
+      },
+    },
+  });
+
+  if (collaborator === null) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "User does not have access to this food review",
+    });
+  }
+};
