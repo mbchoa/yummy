@@ -33,7 +33,7 @@ export const YelpReviews = ({ restaurantId }: IYelpReviewsProps) => {
                 />
               </div>
             </div>
-            <p className="semi-bold h-6 w-2/6 animate-pulse rounded bg-gray-300" />
+            <p className="h-6 w-2/6 animate-pulse rounded bg-gray-300" />
           </div>
           <p className="h-4 w-11/12 animate-pulse rounded bg-gray-300" />
           <p className="h-4 w-4/5 animate-pulse rounded bg-gray-300" />
@@ -68,7 +68,7 @@ export const YelpReviews = ({ restaurantId }: IYelpReviewsProps) => {
               />
             )}
           </div>
-          <p className="semi-bold text-center text-xs">{review.user.name}</p>
+          <p className="text-center text-xs">{review.user.name}</p>
         </div>
         <p className="col-span-full col-start-2 text-sm leading-snug sm:col-start-3 sm:col-end-11 sm:text-base">
           {review.text}
@@ -79,7 +79,7 @@ export const YelpReviews = ({ restaurantId }: IYelpReviewsProps) => {
 
   return (
     <section className="space-y-4">
-      <h2 className="semi-bold text-xl font-medium">Yelp Reviews</h2>
+      <h2 className="text-xl font-medium">Yelp Reviews</h2>
       <ul className="space-y-6">{renderReviews()}</ul>
     </section>
   );

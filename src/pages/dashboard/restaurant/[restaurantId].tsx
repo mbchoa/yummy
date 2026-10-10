@@ -164,7 +164,7 @@ export default function RestaurantById() {
               {isLoadingYelpRestaurant || restaurant === undefined ? (
                 <div className="h-8 w-48 animate-pulse rounded bg-gray-300" />
               ) : (
-                <h1 className="semi text-2xl font-medium">{restaurant.name}</h1>
+                <h1 className="text-2xl font-medium">{restaurant.name}</h1>
               )}
             </header>
             <address className="col-span-2 row-start-2 not-italic">
