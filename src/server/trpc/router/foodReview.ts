@@ -95,7 +95,11 @@ export const foodReview = router({
             restaurantItem: {
               connectOrCreate: {
                 where: {
-                  name: input.name,
+                  name_restaurantId_userId: {
+                    name: input.name,
+                    restaurantId: input.restaurantId,
+                    userId: ctx.session.user.id,
+                  },
                 },
                 create: {
                   name: input.name,
@@ -143,7 +147,11 @@ export const foodReview = router({
           restaurantItem: {
             connectOrCreate: {
               where: {
-                name: input.name,
+                name_restaurantId_userId: {
+                  name: input.name,
+                  restaurantId: input.restaurantId,
+                  userId: selectedUserId,
+                },
               },
               create: {
                 name: input.name,
