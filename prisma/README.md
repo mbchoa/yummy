@@ -57,3 +57,13 @@ In this case, we'll be using the dev instance.
 - Enter the password "yumshin" when prompted
 
 This should result in all tables being created and data being populated as they existed at the time of export.
+
+## Production Migrations
+
+Migrations are applied automatically on production deploys. When Vercel builds with
+`VERCEL_ENV=production`, the `build` script runs `prisma migrate deploy` against the
+production database before `next build`. If a migration fails, the build fails and the
+current deployment keeps serving traffic. Preview and local builds skip this step.
+
+Because the migration runs before the new code goes live, migrations must be compatible
+with the previously deployed code.
