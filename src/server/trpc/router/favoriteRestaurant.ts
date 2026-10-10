@@ -171,7 +171,7 @@ export const favoriteRestaurant = router({
 
       const { selectedUserId } = ctx.session.user.settings;
       if (selectedUserId === ctx.session.user.id) {
-        return ctx.prisma.favoriteRestaurant.findUniqueOrThrow({
+        return ctx.prisma.favoriteRestaurant.findUnique({
           where: {
             restaurantId_userId: {
               restaurantId: input.id,
@@ -199,7 +199,7 @@ export const favoriteRestaurant = router({
         });
       }
 
-      return ctx.prisma.favoriteRestaurant.findUniqueOrThrow({
+      return ctx.prisma.favoriteRestaurant.findUnique({
         where: {
           restaurantId_userId: {
             restaurantId: input.id,
