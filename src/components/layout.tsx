@@ -1,5 +1,10 @@
 import { Disclosure, Menu, Transition } from "@headlessui/react";
-import { Bars3Icon, HomeIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import {
+  Bars3Icon,
+  HomeIcon,
+  UserIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
 import { signOut } from "next-auth/react";
 import Image from "next/image";
 import React, { Fragment } from "react";
@@ -73,13 +78,20 @@ export const Layout: React.FC<IDashboardLayoutProps> = ({ children }) => {
                       <div>
                         <Menu.Button className="flex rounded-full bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
                           <span className="sr-only">Open user menu</span>
-                          <Image
-                            className="h-8 w-8 rounded-full"
-                            src={session?.user?.image ?? ""}
-                            alt="Profile picture"
-                            width={96}
-                            height={96}
-                          />
+                          {session?.user?.image ? (
+                            <Image
+                              className="h-8 w-8 rounded-full"
+                              src={session.user.image}
+                              alt="Profile picture"
+                              width={96}
+                              height={96}
+                            />
+                          ) : (
+                            <UserIcon
+                              className="h-8 w-8 rounded-full stroke-gray-300"
+                              aria-hidden
+                            />
+                          )}
                         </Menu.Button>
                       </div>
                       <Transition
