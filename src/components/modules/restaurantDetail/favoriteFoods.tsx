@@ -101,7 +101,7 @@ export const FavoriteFoods = ({
       );
     }
 
-    if (favoriteRestaurant === undefined || foodReviews === undefined) {
+    if (!favoriteRestaurant || foodReviews === undefined) {
       return <p>Unable to fetch your food reviews.</p>;
     }
 
