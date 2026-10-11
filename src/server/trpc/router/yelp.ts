@@ -1,4 +1,5 @@
-import got from "got";
+import { TRPCError } from "@trpc/server";
+import got, { HTTPError } from "got";
 import Redis from "ioredis";
 import qs from "querystring";
 import { z } from "zod";
@@ -27,16 +28,39 @@ export const yelp = router({
       })
     )
     .query(async ({ input }) => {
-      const response = await got(
-        `https://api.yelp.com/v3/businesses/search?${qs.stringify(input)}`,
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.YELP_API_KEY}`,
-            "Content-Type": "application/json",
-          },
+      try {
+        const response = await got(
+          `https://api.yelp.com/v3/businesses/search?${qs.stringify(input)}`,
+          {
+            headers: {
+              Authorization: `Bearer ${process.env.YELP_API_KEY}`,
+              "Content-Type": "application/json",
+            },
+          }
+        ).json<IYelpBusinessSearchResponseSchema>();
+        return camelCaseKeys<IYelpBusinessSearchResponseSchema>(response);
+      } catch (error) {
+        // Yelp rejected the search itself (inputs are validated above, so in
+        // practice LOCATION_NOT_FOUND) or rate-limited us: report a client
+        // error so it isn't retried. Auth, 5xx and network errors stay 500s.
+        const statusCode =
+          error instanceof HTTPError ? error.response.statusCode : undefined;
+        if (statusCode === 400) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Couldn't find that location. Try a more specific one.",
+            cause: error,
+          });
         }
-      ).json<IYelpBusinessSearchResponseSchema>();
-      return camelCaseKeys<IYelpBusinessSearchResponseSchema>(response);
+        if (statusCode === 429) {
+          throw new TRPCError({
+            code: "TOO_MANY_REQUESTS",
+            message: "Too many searches right now. Try again in a moment.",
+            cause: error,
+          });
+        }
+        throw error;
+      }
     }),
   byId: publicProcedure
     .input(z.object({ id: z.string() }))
