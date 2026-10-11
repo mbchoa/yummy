@@ -4,6 +4,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { Like } from "@prisma/client";
 import classNames from "classnames";
+import Link from "next/link";
 import { useRouter } from "next/router";
 import { useCallback, useEffect, useState } from "react";
 import { AddReviewModal } from "../../../components/addReviewModal";
@@ -11,6 +12,7 @@ import { Button } from "../../../components/button";
 import { Layout } from "../../../components/layout";
 import { FavoriteFoods } from "../../../components/modules/restaurantDetail/favoriteFoods";
 import { YelpReviews } from "../../../components/modules/restaurantDetail/yelpReviews";
+import { retryServerErrors } from "../../../utils/retryServerErrors";
 import { trpc } from "../../../utils/trpc";
 
 export default function RestaurantById() {
@@ -26,19 +28,23 @@ export default function RestaurantById() {
   // data query
   const { query } = useRouter<"/dashboard/restaurant/[restaurantId]">();
   const { restaurantId } = query;
-  const { data: restaurant, isLoading: isLoadingYelpRestaurant } =
-    trpc.yelp.byId.useQuery(
-      { id: restaurantId },
-      {
-        enabled: restaurantId !== undefined,
-        refetchOnWindowFocus: false,
-        trpc: {
-          context: {
-            skipBatch: true,
-          },
+  const {
+    data: restaurant,
+    isLoading: isLoadingYelpRestaurant,
+    error: yelpRestaurantError,
+  } = trpc.yelp.byId.useQuery(
+    { id: restaurantId },
+    {
+      enabled: restaurantId !== undefined,
+      refetchOnWindowFocus: false,
+      retry: retryServerErrors,
+      trpc: {
+        context: {
+          skipBatch: true,
         },
       },
-    );
+    },
+  );
   const {
     data: savedRestaurant,
     isLoading: isLoadingSavedRestaurant,
@@ -138,6 +144,26 @@ export default function RestaurantById() {
   const isLoading = isLoadingYelpRestaurant || isLoadingSavedRestaurant;
 
   const maybeRenderBody = useCallback(() => {
+    if (yelpRestaurantError) {
+      return (
+        <div className="space-y-4 p-4">
+          <h1 className="text-2xl font-medium">
+            {yelpRestaurantError.data?.code === "NOT_FOUND"
+              ? "Restaurant not found"
+              : "Couldn't load this restaurant"}
+          </h1>
+          <p className="text-gray-600">
+            {yelpRestaurantError.data?.code === "NOT_FOUND"
+              ? "Yelp no longer has this restaurant. It may have closed or been removed."
+              : "Something went wrong loading it from Yelp. Try again in a moment."}
+          </p>
+          <Link className="text-indigo-600 hover:underline" href="/dashboard">
+            Back to dashboard
+          </Link>
+        </div>
+      );
+    }
+
     return (
       <>
         <div className="p-4">
@@ -246,6 +272,7 @@ export default function RestaurantById() {
       </>
     );
   }, [
+    yelpRestaurantError,
     isLoadingYelpRestaurant,
     restaurant,
     handleDislikeClick,

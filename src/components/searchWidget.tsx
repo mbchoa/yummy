@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useClickAway } from "react-use";
+import { retryServerErrors } from "../utils/retryServerErrors";
 import { trpc } from "../utils/trpc";
 
 export const SearchWidget = () => {
@@ -20,9 +21,7 @@ export const SearchWidget = () => {
       },
       {
         enabled: false,
-        // don't retry searches Yelp rejected (4xx); retry server errors as usual
-        retry: (failureCount, error) =>
-          (error.data?.httpStatus ?? 500) >= 500 && failureCount < 3,
+        retry: retryServerErrors,
         trpc: {
           context: {
             skipBatch: true,

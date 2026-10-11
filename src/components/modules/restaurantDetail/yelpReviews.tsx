@@ -2,6 +2,7 @@ import { UserIcon } from "@heroicons/react/24/outline";
 import { StarIcon } from "@heroicons/react/24/solid";
 import classNames from "classnames";
 import Image from "next/image";
+import { retryServerErrors } from "../../../utils/retryServerErrors";
 import { trpc } from "../../../utils/trpc";
 
 interface IYelpReviewsProps {
@@ -18,11 +19,16 @@ const formatReviewDate = (timeCreated: string) =>
   });
 
 export const YelpReviews = ({ restaurantId, yelpUrl }: IYelpReviewsProps) => {
-  const { data: yelpReviews, isLoading } = trpc.yelp.reviews.useQuery(
+  const {
+    data: yelpReviews,
+    isLoading,
+    isError,
+  } = trpc.yelp.reviews.useQuery(
     { id: restaurantId },
     {
       enabled: restaurantId !== undefined,
       refetchOnWindowFocus: false,
+      retry: retryServerErrors,
       trpc: {
         context: {
           skipBatch: true,
@@ -32,6 +38,14 @@ export const YelpReviews = ({ restaurantId, yelpUrl }: IYelpReviewsProps) => {
   );
 
   const renderReviews = () => {
+    if (isError) {
+      return (
+        <p className="text-sm text-gray-500">
+          Couldn&apos;t load Yelp reviews right now.
+        </p>
+      );
+    }
+
     if (isLoading || !yelpReviews) {
       return [1, 2, 3].map((key) => (
         <li key={key} className="space-y-2">
