@@ -81,3 +81,48 @@ current deployment keeps serving traffic. Preview and local builds skip this ste
 
 Because the migration runs before the new code goes live, migrations must be compatible
 with the previously deployed code.
+
+## Repairing Misattached Dish Reviews (#115)
+
+Before #90, `RestaurantItem.name` was globally unique, so adding a dish whose name already
+existed anywhere attached the new review to that existing item, sometimes in another
+user's list. The scripts in [scripts/repair-misattached-reviews](scripts/repair-misattached-reviews)
+find and repair those reviews. They're plain SQL run with `psql`, and they require migration
+`20261009000000_scope_restaurant_item_name_unique` to be applied first.
+
+A review is misattached when its `reviewedById` differs from its item's `userId`. Each one is
+classified (see the header of `classify.sql` for the full rules):
+
+- **repairable**: the reviewer has their own favorite at the item's restaurant, created
+  before the review. The review moves to the reviewer's item with the same name at that
+  restaurant, which is created if missing.
+- **ambiguous**: the reviewer has no favorite there, the favorite was added after the
+  review, or the reviewer's account was deleted. These are reported and left untouched for
+  a manual decision.
+
+Run them in this order, from the project root:
+
+1. Report (read-only):
+
+   ```shell
+   psql "$DATABASE_URL" -f prisma/scripts/repair-misattached-reviews/report.sql
+   ```
+
+2. Dry run. `repair.sql` ends with `ROLLBACK`, so it shows the planned moves and the row
+   counts before and after, then undoes everything:
+
+   ```shell
+   psql "$DATABASE_URL" -f prisma/scripts/repair-misattached-reviews/repair.sql
+   ```
+
+3. Commit. Change the final `ROLLBACK;` in `repair.sql` to `COMMIT;` (or a local copy kept
+   next to `classify.sql`) and run it again. The script aborts and rolls back if any
+   planned review didn't move or any review or favorite count changed. It never deletes
+   rows, and running it again is a no-op.
+
+**Limitation:** a review attached to the right user's item at the wrong restaurant (both
+restaurants in the same list) looks correct in the data and can't be detected.
+
+To test the scripts locally, migrate a throwaway database up to but not including
+`20261009000000`, apply `fixtures/seed-prefix.sql`, then that migration, then
+`fixtures/seed-postfix.sql`, and run the steps above against it.
