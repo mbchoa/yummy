@@ -11,6 +11,7 @@ import {
 } from "../../../models/YelpSchemas";
 import { publicProcedure, router } from "../trpc";
 import { getYelpRestaurantById } from "./helpers/getYelpRestaurantById";
+import { rethrowYelpError } from "./helpers/rethrowYelpError";
 
 const redis = new Redis(env.RAILWAY_REDIS_URL);
 
@@ -70,9 +71,23 @@ export const yelp = router({
   byIds: publicProcedure
     .input(z.array(z.string()))
     .query(async ({ input: restaurantIds }) => {
-      return Promise.all(
+      const results = await Promise.allSettled(
         restaurantIds.map((id) => getYelpRestaurantById(id, redis)),
       );
+      // skip saved restaurants Yelp no longer has, so one removed business
+      // doesn't break the whole list; any other failure still fails the query
+      return results.flatMap((result) => {
+        if (result.status === "fulfilled") {
+          return [result.value];
+        }
+        if (
+          result.reason instanceof TRPCError &&
+          result.reason.code === "NOT_FOUND"
+        ) {
+          return [];
+        }
+        throw result.reason;
+      });
     }),
   reviews: publicProcedure
     .input(z.object({ id: z.string() }))
@@ -86,14 +101,18 @@ export const yelp = router({
       }
 
       const response = await got(
-        `https://api.yelp.com/v3/businesses/${input.id}/reviews?sort_by=newest`,
+        `https://api.yelp.com/v3/businesses/${encodeURIComponent(
+          input.id,
+        )}/reviews?sort_by=newest`,
         {
           headers: {
             Authorization: `Bearer ${process.env.YELP_API_KEY}`,
             "Content-Type": "application/json",
           },
         },
-      ).json<IYelpBusinessReviewsResponseSchema>();
+      )
+        .json<IYelpBusinessReviewsResponseSchema>()
+        .catch(rethrowYelpError);
       const formattedResponse =
         camelCaseKeys<IYelpBusinessReviewsResponseSchema>(response);
 
