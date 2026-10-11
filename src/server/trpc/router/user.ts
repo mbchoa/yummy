@@ -21,7 +21,15 @@ export const user = router({
       })
     )
     .query(({ input, ctx }) => {
-      const searchTerm = `${input.term}:*`;
+      // prefix-match every word, stripping characters that are tsquery syntax
+      const words = input.term
+        .split(/\s+/)
+        .map((word) => word.replace(/[&|!():*<>'\\]/g, ""))
+        .filter((word) => word.length > 0);
+      if (words.length === 0) {
+        return Promise.resolve([] as User[]);
+      }
+      const searchTerm = words.map((word) => `${word}:*`).join(" & ");
       return ctx.prisma.$queryRaw`
         SELECT * FROM "public"."User"
           WHERE to_tsvector(concat_ws(' ', "public"."User"."email","public"."User"."name")) @@ to_tsquery(${searchTerm})

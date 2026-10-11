@@ -16,6 +16,7 @@ interface IButtonProps {
   variant?: "contained" | "outlined" | "ghost";
   disabled?: boolean;
   linkRenderer?: ILinkRenderer;
+  type?: "button" | "submit";
 }
 
 export const Button = ({
@@ -29,6 +30,7 @@ export const Button = ({
   variant = "contained",
   disabled = false,
   linkRenderer,
+  type,
 }: IButtonProps) => {
   const cx = classNames(
     "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm focus:outline-none h-min",
@@ -59,7 +61,11 @@ export const Button = ({
 
   if (isLoading) {
     return (
-      <button className={classNames(cx, "justify-center")} disabled={true}>
+      <button
+        className={classNames(cx, "justify-center")}
+        disabled={true}
+        type={type}
+      >
         <svg
           className="h-5 w-5 animate-spin text-white"
           xmlns="http://www.w3.org/2000/svg"
@@ -89,7 +95,12 @@ export const Button = ({
       {linkRenderer !== undefined ? (
         linkRenderer(children, cx)
       ) : (
-        <button className={cx} disabled={disabled} onClick={onClick}>
+        <button
+          className={cx}
+          disabled={disabled}
+          onClick={onClick}
+          type={type}
+        >
           {LeftIcon}
           {children}
           {RightIcon}
