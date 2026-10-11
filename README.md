@@ -1,27 +1,35 @@
-# Create T3 App
+# yummy
 
-This is an app bootstrapped according to the [init.tips](https://init.tips) stack, also known as the T3-Stack.
+A personal restaurant and dish journal. Search restaurants through the Yelp Fusion API, save the ones you like or dislike, and keep a list of the dishes you've tried at each one with a thumbs up or down. You can add collaborators who can view and edit your list.
 
-## What's next? How do I make an app with this?
+Built with Next.js (pages router), tRPC, Prisma (Postgres), NextAuth (Auth0) and Tailwind CSS. Yelp responses are cached in Redis.
 
-We try to keep this project as simple as possible, so you can start with the most basic configuration and then move on to more advanced configuration.
+## Local setup
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+Requirements: Node 22+, pnpm and Docker.
 
-- [Next-Auth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [TailwindCSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
+1. Install dependencies:
 
-We also [roll our own docs](https://create.t3.gg) with some summary information and links to the respective documentation.
+   ```shell
+   pnpm install
+   ```
 
-Also checkout these awesome tutorials on `create-t3-app`.
+2. Copy `.env.example` to `.env` and fill in the secrets: Auth0 application credentials (`AUTH0_*`), a `YELP_API_KEY`, and a `NEXTAUTH_SECRET` (`openssl rand -base64 32`).
 
-- [Build a Blog With the T3 Stack - tRPC, TypeScript, Next.js, Prisma & Zod](https://www.youtube.com/watch?v=syEWlxVFUrY)
-- [Build a Live Chat Application with the T3 Stack - TypeScript, Tailwind, tRPC](https://www.youtube.com/watch?v=dXRRY37MPuk)
-- [Build a full stack app with create-t3-app](https://www.nexxel.dev/blog/ct3a-guestbook)
-- [A first look at create-t3-app](https://dev.to/ajcwebdev/a-first-look-at-create-t3-app-1i8f)
+3. Start Postgres and Redis and apply the migrations. See [prisma/README.md](prisma/README.md). The default `DATABASE_URL` and `RAILWAY_REDIS_URL` in `.env.example` match those instructions.
 
-## How do I deploy this?
+4. Start the dev server:
 
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+   ```shell
+   pnpm dev
+   ```
+
+   The app runs at http://localhost:3000.
+
+## Deployment
+
+The app is deployed on Vercel, with Postgres and Redis hosted on Railway. Production builds apply pending Prisma migrations before building. See [prisma/README.md](prisma/README.md#production-migrations).
+
+## Commits
+
+Commit messages follow [Conventional Commits](https://www.conventionalcommits.org), enforced by a commit-msg hook and in CI.
