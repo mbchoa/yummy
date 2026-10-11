@@ -26,7 +26,8 @@ export default function RestaurantById() {
   }, []);
 
   // data query
-  const { query } = useRouter<"/dashboard/restaurant/[restaurantId]">();
+  const router = useRouter<"/dashboard/restaurant/[restaurantId]">();
+  const { query } = router;
   const { restaurantId } = query;
   const {
     data: restaurant,
@@ -52,7 +53,11 @@ export default function RestaurantById() {
   } = trpc.favoriteRestaurant.byId.useQuery(
     { id: restaurantId },
     {
-      enabled: restaurant !== undefined,
+      // also load it when Yelp no longer has the restaurant, so a saved one
+      // can still be removed from the list
+      enabled:
+        restaurant !== undefined ||
+        yelpRestaurantError?.data?.code === "NOT_FOUND",
       refetchOnWindowFocus: false,
       retry: false,
     },
@@ -63,8 +68,14 @@ export default function RestaurantById() {
     trpc.favoriteRestaurant.add.useMutation();
   const { mutateAsync: updateRestaurant } =
     trpc.favoriteRestaurant.update.useMutation();
-  const { mutateAsync: removeRestaurant } =
+  const { mutateAsync: removeRestaurant, isLoading: isRemovingRestaurant } =
     trpc.favoriteRestaurant.remove.useMutation();
+  const [isConfirmingRemove, setIsConfirmingRemove] = useState(false);
+
+  const handleRemoveMissingRestaurant = useCallback(async () => {
+    await removeRestaurant({ id: restaurantId });
+    await router.push("/dashboard");
+  }, [removeRestaurant, restaurantId, router]);
   const [like, setLike] = useState<Like>(Like.UNSELECTED);
 
   useEffect(() => {
@@ -157,6 +168,48 @@ export default function RestaurantById() {
               ? "Yelp no longer has this restaurant. It may have closed or been removed."
               : "Something went wrong loading it from Yelp. Try again in a moment."}
           </p>
+          {yelpRestaurantError.data?.code === "NOT_FOUND" &&
+            savedRestaurant && (
+              <div className="space-y-3 rounded border border-gray-300 p-4">
+                {isConfirmingRemove ? (
+                  <>
+                    <p className="text-sm text-gray-700">
+                      Remove it from your list, along with any dishes you logged
+                      there? This can&apos;t be undone.
+                    </p>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        isLoading={isRemovingRestaurant}
+                        onClick={handleRemoveMissingRestaurant}
+                      >
+                        Remove
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setIsConfirmingRemove(false)}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm text-gray-700">
+                      It&apos;s still saved in your list.
+                    </p>
+                    <Button
+                      size="sm"
+                      variant="outlined"
+                      onClick={() => setIsConfirmingRemove(true)}
+                    >
+                      Remove from my list
+                    </Button>
+                  </>
+                )}
+              </div>
+            )}
           <Link className="text-indigo-600 hover:underline" href="/dashboard">
             Back to dashboard
           </Link>
@@ -273,6 +326,10 @@ export default function RestaurantById() {
     );
   }, [
     yelpRestaurantError,
+    savedRestaurant,
+    isConfirmingRemove,
+    isRemovingRestaurant,
+    handleRemoveMissingRestaurant,
     isLoadingYelpRestaurant,
     restaurant,
     handleDislikeClick,
