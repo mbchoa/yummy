@@ -17,6 +17,7 @@ export const AddReviewModal = ({
   restaurantId,
 }: IAddReviewModalProps) => {
   const [name, setName] = useState("");
+  const [note, setNote] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const { refetch } = trpc.foodReview.all.useQuery(
     { restaurantId },
@@ -32,18 +33,31 @@ export const AddReviewModal = ({
     []
   );
 
+  const handleNoteChange = useCallback(
+    (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setNote(event.target.value);
+    },
+    []
+  );
+
   const handleAddFoodReview = useCallback(
     async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       if (trimmedName.length === 0) {
         return;
       }
-      await addFoodReview({ name: trimmedName, restaurantId, like: Like.LIKE });
+      await addFoodReview({
+        name: trimmedName,
+        restaurantId,
+        like: Like.LIKE,
+        review: note,
+      });
       await refetch();
       setName("");
+      setNote("");
       closeModal();
     },
-    [addFoodReview, closeModal, refetch, restaurantId, trimmedName]
+    [addFoodReview, closeModal, note, refetch, restaurantId, trimmedName]
   );
 
   return (
@@ -94,27 +108,36 @@ export const AddReviewModal = ({
                     <XMarkIcon className="h-5 w-5" aria-hidden />
                   </button>
                 </div>
-                <form
-                  className="mt-2 flex space-x-4"
-                  onSubmit={handleAddFoodReview}
-                >
+                <form className="mt-2 space-y-3" onSubmit={handleAddFoodReview}>
                   <input
                     ref={inputRef}
                     type="text"
-                    className="flex-1 rounded text-sm"
+                    className="w-full rounded text-sm"
                     name="itemName"
                     aria-label="Dish name"
                     placeholder="Double Double Cheeseburger"
                     value={name}
                     onChange={handleChange}
                   />
-                  <Button
-                    type="submit"
-                    isLoading={isAddingFoodReview}
-                    disabled={trimmedName.length === 0}
-                  >
-                    Add
-                  </Button>
+                  <textarea
+                    className="w-full rounded text-sm"
+                    name="note"
+                    aria-label="Note (optional)"
+                    placeholder="Note (optional), e.g. ask for it animal style"
+                    rows={3}
+                    maxLength={500}
+                    value={note}
+                    onChange={handleNoteChange}
+                  />
+                  <div className="flex justify-end">
+                    <Button
+                      type="submit"
+                      isLoading={isAddingFoodReview}
+                      disabled={trimmedName.length === 0}
+                    >
+                      Add
+                    </Button>
+                  </div>
                 </form>
               </Dialog.Panel>
             </Transition.Child>
