@@ -17,7 +17,7 @@ then
     echo "Detected changes to Prisma schema or migration files. Regenerating client and applying migrations..."
     # Ensure packages are installed
     pnpm i
-    pnpm run db:deploy && pnpm  db:generate
+    pnpm db:generate && pnpm run db:deploy
 fi
 
 cd -
