@@ -18,7 +18,7 @@ export const user = router({
     .input(
       z.object({
         term: z.string(),
-      })
+      }),
     )
     .query(({ input, ctx }) => {
       // prefix-match every word, stripping characters that are tsquery syntax

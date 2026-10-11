@@ -10,7 +10,7 @@ export const favoriteRestaurant = router({
         .object({
           like: z.enum([Like.LIKE, Like.DISLIKE, Like.UNSELECTED]),
         })
-        .optional()
+        .optional(),
     )
     .query(async ({ input, ctx }) => {
       if (ctx.session.user.settings === null) {
@@ -71,7 +71,7 @@ export const favoriteRestaurant = router({
       z.object({
         id: z.string(),
         like: z.enum([Like.LIKE, Like.DISLIKE]),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       if (ctx.session.user.settings === null) {
@@ -223,7 +223,7 @@ export const favoriteRestaurant = router({
       z.object({
         id: z.string(),
         like: z.enum([Like.LIKE, Like.DISLIKE, Like.UNSELECTED]),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       if (ctx.session.user.settings === null) {

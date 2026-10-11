@@ -2,7 +2,7 @@ import type { ParsedUrlQuery } from "querystring";
 
 export const getParamFromPath = (
   params: ParsedUrlQuery | undefined,
-  param: string
+  param: string,
 ): string | undefined => {
   const rawParam = params ? params[param] : undefined;
 

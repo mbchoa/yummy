@@ -84,7 +84,7 @@ export const foodReview = router({
           .default("UNSELECTED"),
         name: z.string(),
         review: noteSchema.optional(),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       if (ctx.session.user.settings === null) {
@@ -191,7 +191,7 @@ export const foodReview = router({
         id: z.string(),
         like: z.enum(["LIKE", "DISLIKE", "UNSELECTED"]).optional(),
         review: noteSchema.optional(),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       await assertCanEditFoodReview(ctx.prisma, ctx.session.user.id, input.id);
@@ -222,7 +222,7 @@ export const foodReview = router({
 const assertCanEditFoodReview = async (
   prisma: PrismaClient,
   userId: string,
-  foodReviewId: string
+  foodReviewId: string,
 ) => {
   const foodReview = await prisma.restaurantItemReview.findUnique({
     where: {

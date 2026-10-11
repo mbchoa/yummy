@@ -45,7 +45,7 @@ export const Layout: React.FC<IDashboardLayoutProps> = ({ children }) => {
                       <Bars3Icon className="block h-6 w-6" aria-hidden="true" />
                     )}
                   </Disclosure.Button>
-                  <header className=" px-4 font-semibold tracking-wide text-white sm:hidden">
+                  <header className="px-4 font-semibold tracking-wide text-white sm:hidden">
                     <span>yum</span>
                     <span className="text-indigo-400">shin</span>
                   </header>
@@ -62,7 +62,7 @@ export const Layout: React.FC<IDashboardLayoutProps> = ({ children }) => {
                               item.current
                                 ? "bg-gray-900 text-white"
                                 : "text-gray-300 hover:bg-gray-700 hover:text-white",
-                              "rounded-md px-3 py-2 text-sm font-medium"
+                              "rounded-md px-3 py-2 text-sm font-medium",
                             )}
                             aria-current={item.current ? "page" : undefined}
                           >
@@ -109,7 +109,7 @@ export const Layout: React.FC<IDashboardLayoutProps> = ({ children }) => {
                               <button
                                 className={classNames(
                                   active ? "bg-gray-100" : "",
-                                  "block w-full px-4 py-2 text-left text-sm text-gray-700"
+                                  "block w-full px-4 py-2 text-left text-sm text-gray-700",
                                 )}
                                 onClick={() => signOut()}
                               >
@@ -135,7 +135,7 @@ export const Layout: React.FC<IDashboardLayoutProps> = ({ children }) => {
                       item.current
                         ? "bg-gray-900 text-white"
                         : "text-gray-300 hover:bg-gray-700 hover:text-white",
-                      "block rounded-md px-3 py-2 text-base font-medium"
+                      "block rounded-md px-3 py-2 text-base font-medium",
                     )}
                     aria-current={item.current ? "page" : undefined}
                   >

@@ -2,9 +2,9 @@ import camelCase from "lodash-es/camelCase";
 import isPlainObject from "lodash-es/isObject";
 
 export const camelCaseKeys = <
-  T extends Record<string, unknown> | Record<string, unknown>[]
+  T extends Record<string, unknown> | Record<string, unknown>[],
 >(
-  obj: T
+  obj: T,
 ): SnakeToCamelCaseNested<T> => {
   if (Array.isArray(obj)) {
     return <SnakeToCamelCaseNested<T>>obj.map((v) => camelCaseKeys(v));
@@ -16,7 +16,7 @@ export const camelCaseKeys = <
         ...result,
         [camelCase(key)]: camelCaseKeys(<T>obj[key]),
       }),
-      {}
+      {},
     );
   }
 

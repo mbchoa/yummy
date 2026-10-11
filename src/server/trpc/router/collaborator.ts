@@ -28,7 +28,7 @@ export const collaborator = router({
     .input(
       z.object({
         collaboratorId: z.string(),
-      })
+      }),
     )
     .mutation(({ input, ctx }) => {
       return ctx.prisma.collaborator.create({
@@ -42,7 +42,7 @@ export const collaborator = router({
     .input(
       z.object({
         id: z.string(),
-      })
+      }),
     )
     .mutation(async ({ input, ctx }) => {
       const { count } = await ctx.prisma.collaborator.deleteMany({

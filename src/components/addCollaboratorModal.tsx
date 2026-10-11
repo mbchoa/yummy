@@ -23,11 +23,11 @@ export const AddCollaboratorModal = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const { data: searchResults, isFetching: isSearching } =
     trpc.user.search.useQuery(
-    { term: search },
-    {
-      enabled: search.length > 0,
-    }
-  );
+      { term: search },
+      {
+        enabled: search.length > 0,
+      },
+    );
   const { data: allCollaborators, refetch: refetchCollaborators } =
     trpc.collaborator.all.useQuery();
   const { mutateAsync: addCollaborator, isLoading: isAddingCollaborator } =
@@ -37,7 +37,7 @@ export const AddCollaboratorModal = ({
       setSearch(event.target.value);
       setSelectedCollaboratorId("");
     },
-    []
+    [],
   );
 
   const handleSelectCollaborator = useCallback(
@@ -46,7 +46,7 @@ export const AddCollaboratorModal = ({
       setSearch(user.name ?? user.email ?? "Unknown");
       setSelectedCollaboratorId(user.id);
     },
-    []
+    [],
   );
 
   const handleAddCollaborator = useCallback(
@@ -60,7 +60,7 @@ export const AddCollaboratorModal = ({
       setSearch("");
       closeModal();
     },
-    [addCollaborator, closeModal, refetchCollaborators, selectedCollaboratorId]
+    [addCollaborator, closeModal, refetchCollaborators, selectedCollaboratorId],
   );
 
   const maybeRenderSearchResults = useCallback(() => {
@@ -87,14 +87,14 @@ export const AddCollaboratorModal = ({
             const isCollaborator =
               allCollaborators !== undefined &&
               allCollaborators.some(
-                (collaborator) => collaborator.collaboratorId === user.id
+                (collaborator) => collaborator.collaboratorId === user.id,
               );
             const isSelected = user.id === selectedCollaboratorId;
             return (
               <li
                 className={classNames(
                   "flex items-center justify-between rounded-md",
-                  isSelected && "bg-indigo-50 ring-2 ring-indigo-500"
+                  isSelected && "bg-indigo-50 ring-2 ring-indigo-500",
                 )}
                 key={user.id}
               >
@@ -192,8 +192,8 @@ export const AddCollaboratorModal = ({
                   </button>
                 </div>
                 <p className="mt-1 text-sm text-gray-500">
-                  Search for someone by name or email and select them. They
-                  will be able to view and edit your list.
+                  Search for someone by name or email and select them. They will
+                  be able to view and edit your list.
                 </p>
                 <form
                   className="mt-4 flex space-x-4"

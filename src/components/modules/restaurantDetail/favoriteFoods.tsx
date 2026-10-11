@@ -20,7 +20,7 @@ export const FavoriteFoods = ({
   const { data: favoriteRestaurant, isLoading: isFavoriteRestaurantLoading } =
     trpc.favoriteRestaurant.byId.useQuery(
       { id: restaurantId },
-      { enabled: !!restaurantId }
+      { enabled: !!restaurantId },
     );
   const {
     data: foodReviews,
@@ -28,7 +28,7 @@ export const FavoriteFoods = ({
     refetch: refetchFoodReviews,
   } = trpc.foodReview.all.useQuery(
     { restaurantId: restaurantId },
-    { enabled: !!restaurantId }
+    { enabled: !!restaurantId },
   );
   const isLoading = isFavoriteRestaurantLoading || isFoodReviewsLoading;
   const { mutateAsync: updateFoodReview, isLoading: isUpdatingFoodReview } =
@@ -46,7 +46,7 @@ export const FavoriteFoods = ({
       });
       await refetchFoodReviews();
     },
-    [refetchFoodReviews, updateFoodReview]
+    [refetchFoodReviews, updateFoodReview],
   );
 
   const handleLikeFoodReview = useCallback(
@@ -54,7 +54,7 @@ export const FavoriteFoods = ({
       await updateFoodReview({ id: foodReviewId, like: "LIKE" });
       await refetchFoodReviews();
     },
-    [refetchFoodReviews, updateFoodReview]
+    [refetchFoodReviews, updateFoodReview],
   );
 
   const handleRemoveFoodReview = useCallback(
@@ -62,7 +62,7 @@ export const FavoriteFoods = ({
       await removeFoodReview({ id: foodReviewId });
       await refetchFoodReviews();
     },
-    [removeFoodReview, refetchFoodReviews]
+    [removeFoodReview, refetchFoodReviews],
   );
 
   const handleEditNote = useCallback(
@@ -70,7 +70,7 @@ export const FavoriteFoods = ({
       setEditingNoteId(foodReviewId);
       setNoteDraft(note ?? "");
     },
-    []
+    [],
   );
 
   const handleCancelNote = useCallback(() => {
@@ -81,7 +81,7 @@ export const FavoriteFoods = ({
     (event: React.ChangeEvent<HTMLTextAreaElement>) => {
       setNoteDraft(event.target.value);
     },
-    []
+    [],
   );
 
   const handleSaveNote = useCallback(
@@ -94,7 +94,7 @@ export const FavoriteFoods = ({
       await refetchFoodReviews();
       setEditingNoteId(null);
     },
-    [editingNoteId, noteDraft, refetchFoodReviews, updateFoodReview]
+    [editingNoteId, noteDraft, refetchFoodReviews, updateFoodReview],
   );
 
   const maybeRenderBody = useCallback(() => {
@@ -212,7 +212,7 @@ export const FavoriteFoods = ({
                   <HandThumbDownIcon
                     className={classNames(
                       "h-5 w-5 stroke-slate-600",
-                      foodReview.like === "DISLIKE" && "fill-red-500"
+                      foodReview.like === "DISLIKE" && "fill-red-500",
                     )}
                   />
                 }
@@ -225,7 +225,7 @@ export const FavoriteFoods = ({
                   <HandThumbUpIcon
                     className={classNames(
                       "h-5 w-5 stroke-slate-600",
-                      foodReview.like === "LIKE" && "fill-green-500"
+                      foodReview.like === "LIKE" && "fill-green-500",
                     )}
                   />
                 }

@@ -28,7 +28,7 @@ export const SearchWidget = () => {
             skipBatch: true,
           },
         },
-      }
+      },
     );
 
   useEffect(() => {
@@ -125,7 +125,7 @@ export const SearchWidget = () => {
     }
 
     return (
-      <div className="absolute top-full left-0 right-0 mt-1 max-h-[70vh] overflow-y-auto rounded-lg bg-white drop-shadow-xl">
+      <div className="absolute left-0 right-0 top-full mt-1 max-h-[70vh] overflow-y-auto rounded-lg bg-white drop-shadow-xl">
         {renderSearchResultsContent()}
       </div>
     );
@@ -135,14 +135,14 @@ export const SearchWidget = () => {
     (event: React.ChangeEvent<HTMLInputElement>) => {
       setSearchTerm(event.target.value);
     },
-    []
+    [],
   );
 
   const handleLocationChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       setLocation(event.target.value);
     },
-    []
+    [],
   );
 
   const handleFocusChange = useCallback(() => {

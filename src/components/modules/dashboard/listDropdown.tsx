@@ -42,7 +42,7 @@ export const ListDropDown = ({ onSwitchUser }: IListDropDownProps) => {
       onSwitchUser();
       refetchUserSetting();
     },
-    [switchUser, onSwitchUser, refetchUserSetting]
+    [switchUser, onSwitchUser, refetchUserSetting],
   );
 
   return (
@@ -53,7 +53,7 @@ export const ListDropDown = ({ onSwitchUser }: IListDropDownProps) => {
             {userSetting?.selectedUserId === session?.user?.id
               ? "Personal"
               : otherUsers?.find(
-                  (user) => user.ownerId === userSetting?.selectedUserId
+                  (user) => user.ownerId === userSetting?.selectedUserId,
                 )?.owner.name}
             <ChevronDownIcon
               className="-mr-1 ml-2 h-5 w-5"
