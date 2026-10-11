@@ -15,6 +15,9 @@ interface IButtonProps {
   color?: "primary" | "secondary";
   variant?: "contained" | "outlined" | "ghost";
   disabled?: boolean;
+  ariaLabel?: string;
+  ariaPressed?: boolean;
+  title?: string;
   linkRenderer?: ILinkRenderer;
   type?: "button" | "submit";
 }
@@ -29,6 +32,9 @@ export const Button = ({
   color = "primary",
   variant = "contained",
   disabled = false,
+  ariaLabel,
+  ariaPressed,
+  title,
   linkRenderer,
   type,
 }: IButtonProps) => {
@@ -100,6 +106,9 @@ export const Button = ({
           disabled={disabled}
           onClick={onClick}
           type={type}
+          aria-label={ariaLabel}
+          aria-pressed={ariaPressed}
+          title={title}
         >
           {LeftIcon}
           {children}
