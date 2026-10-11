@@ -105,43 +105,54 @@ export default function Dashboard() {
     likedYelpRestaurants,
   ]);
 
+  const dishCountByRestaurantId = useMemo(() => {
+    const counts: Record<string, number> = {};
+    [...(favoriteRestaurants ?? []), ...(dislikedRestaurants ?? [])].forEach(
+      (restaurant) => {
+        counts[restaurant.restaurantId] = restaurant._count.restaurantItems;
+      }
+    );
+    return counts;
+  }, [favoriteRestaurants, dislikedRestaurants]);
+
   const maybeRenderPanels = useCallback(() => {
     return Object.values(data).map(
       ({ isLoading, restaurantsGroupedByCity }, idx) => (
         <Tab.Panel
           key={idx}
           className={classNames(
-            "rounded-xl bg-white p-3",
-            "ring-white ring-opacity-60 ring-offset-2 ring-offset-blue-400 focus:outline-none focus:ring-2",
+            "rounded-xl bg-white p-4",
+            "ring-white ring-opacity-60 ring-offset-2 ring-offset-indigo-400 focus:outline-none focus:ring-2",
             "drop-shadow-md"
           )}
         >
           <RestaurantsList
             isLoading={isLoading}
             restaurants={restaurantsGroupedByCity}
+            dishCountByRestaurantId={dishCountByRestaurantId}
           />
         </Tab.Panel>
       )
     );
-  }, [data]);
+  }, [data, dishCountByRestaurantId]);
 
   return (
     <Layout>
       <SearchWidget />
       <div className="px-4">
         <Tab.Group>
-          <div className="flex items-center justify-between">
-            <Tab.List className="flex basis-1/2 space-x-1 rounded-xl bg-blue-900/20 p-1">
+          <div className="flex items-center justify-between gap-4">
+            <Tab.List className="flex space-x-1 rounded-xl bg-gray-200 p-1">
               {["Favorites", "Dislikes"].map((category) => (
                 <Tab
                   key={category}
                   className={({ selected }) =>
                     classNames(
-                      "w-full rounded-lg py-2.5 text-sm font-medium leading-5 text-indigo-500 transition-all",
+                      "rounded-lg px-6 py-2 text-sm font-medium leading-5 transition-all",
                       "ring-white ring-opacity-60 ring-offset-2 ring-offset-indigo-400 focus:outline-none focus:ring-2",
                       selected
-                        ? "bg-white shadow"
-                        : "text-blue-100 hover:bg-white/[0.12] hover:text-white"
+                        ? "bg-white text-indigo-600 shadow"
+                        : "text-gray-600 hover:bg-white/60 hover:text-gray-900"
                     )
                   }
                 >
