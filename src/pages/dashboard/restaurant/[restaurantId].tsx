@@ -37,7 +37,7 @@ export default function RestaurantById() {
             skipBatch: true,
           },
         },
-      }
+      },
     );
   const {
     data: savedRestaurant,
@@ -49,7 +49,7 @@ export default function RestaurantById() {
       enabled: restaurant !== undefined,
       refetchOnWindowFocus: false,
       retry: false,
-    }
+    },
   );
 
   // data mutation
@@ -191,8 +191,8 @@ export default function RestaurantById() {
                       isLoading
                         ? "fill-none stroke-gray-300"
                         : like === Like.DISLIKE
-                        ? "fill-red-500 stroke-red-700"
-                        : "fill-none stroke-gray-500"
+                          ? "fill-red-500 stroke-red-700"
+                          : "fill-none stroke-gray-500",
                     )}
                   />
                 }
@@ -213,8 +213,8 @@ export default function RestaurantById() {
                       isLoading
                         ? "fill-none stroke-gray-300"
                         : like === Like.LIKE
-                        ? "fill-green-500 stroke-green-700"
-                        : "fill-none stroke-gray-500"
+                          ? "fill-green-500 stroke-green-700"
+                          : "fill-none stroke-gray-500",
                     )}
                   />
                 }

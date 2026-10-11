@@ -7,7 +7,7 @@ import { env } from "../../../env/server.mjs";
 import { camelCaseKeys } from "../../../lib/camelCaseKeys";
 import {
   type IYelpBusinessReviewsResponseSchema,
-  type IYelpBusinessSearchResponseSchema
+  type IYelpBusinessSearchResponseSchema,
 } from "../../../models/YelpSchemas";
 import { publicProcedure, router } from "../trpc";
 import { getYelpRestaurantById } from "./helpers/getYelpRestaurantById";
@@ -25,7 +25,7 @@ export const yelp = router({
         sortBy: z
           .enum(["best_match", "rating", "review_count", "distance"])
           .default("best_match"),
-      })
+      }),
     )
     .query(async ({ input }) => {
       try {
@@ -36,7 +36,7 @@ export const yelp = router({
               Authorization: `Bearer ${process.env.YELP_API_KEY}`,
               "Content-Type": "application/json",
             },
-          }
+          },
         ).json<IYelpBusinessSearchResponseSchema>();
         return camelCaseKeys<IYelpBusinessSearchResponseSchema>(response);
       } catch (error) {
@@ -71,7 +71,7 @@ export const yelp = router({
     .input(z.array(z.string()))
     .query(async ({ input: restaurantIds }) => {
       return Promise.all(
-        restaurantIds.map((id) => getYelpRestaurantById(id, redis))
+        restaurantIds.map((id) => getYelpRestaurantById(id, redis)),
       );
     }),
   reviews: publicProcedure
@@ -80,7 +80,9 @@ export const yelp = router({
       const cacheKey = `yelpBusinessReviews:${input.id}`;
       const cached = await redis.get(cacheKey);
       if (cached) {
-        return JSON.parse(cached) as SnakeToCamelCaseNested<IYelpBusinessReviewsResponseSchema>;
+        return JSON.parse(
+          cached,
+        ) as SnakeToCamelCaseNested<IYelpBusinessReviewsResponseSchema>;
       }
 
       const response = await got(
@@ -90,7 +92,7 @@ export const yelp = router({
             Authorization: `Bearer ${process.env.YELP_API_KEY}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       ).json<IYelpBusinessReviewsResponseSchema>();
       const formattedResponse =
         camelCaseKeys<IYelpBusinessReviewsResponseSchema>(response);
@@ -99,7 +101,7 @@ export const yelp = router({
         cacheKey,
         JSON.stringify(formattedResponse),
         "EX",
-        60 * 60 * 24 * 7 // cache reviews for 1 week
+        60 * 60 * 24 * 7, // cache reviews for 1 week
       );
       return formattedResponse;
     }),

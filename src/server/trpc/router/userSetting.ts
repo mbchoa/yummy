@@ -6,7 +6,7 @@ export const userSetting = router({
     .input(
       z.object({
         userId: z.string(),
-      })
+      }),
     )
     .mutation(({ input, ctx }) => {
       return ctx.prisma.userSetting.update({

@@ -18,7 +18,7 @@ export default function Dashboard() {
     refetch: refetchFavoriteRestaurants,
   } = trpc.favoriteRestaurant.all.useQuery(
     { like: Like.LIKE },
-    { enabled: session !== undefined, keepPreviousData: true }
+    { enabled: session !== undefined, keepPreviousData: true },
   );
   const {
     data: likedYelpRestaurants,
@@ -26,7 +26,7 @@ export default function Dashboard() {
     refetch: refetchLikedYelpRestaurants,
   } = trpc.yelp.byIds.useQuery(
     (favoriteRestaurants ?? []).map(
-      (favoriteRestaurant) => favoriteRestaurant.restaurantId
+      (favoriteRestaurant) => favoriteRestaurant.restaurantId,
     ),
     {
       enabled: favoriteRestaurants !== undefined,
@@ -36,7 +36,7 @@ export default function Dashboard() {
           skipBatch: true,
         },
       },
-    }
+    },
   );
   const {
     data: dislikedRestaurants,
@@ -44,7 +44,7 @@ export default function Dashboard() {
     refetch: refetchDislikedRestaurants,
   } = trpc.favoriteRestaurant.all.useQuery(
     { like: Like.DISLIKE },
-    { enabled: session !== undefined, keepPreviousData: true }
+    { enabled: session !== undefined, keepPreviousData: true },
   );
   const {
     data: dislikedYelpRestaurants,
@@ -52,7 +52,7 @@ export default function Dashboard() {
     refetch: refetchDislikedYelpRestaurants,
   } = trpc.yelp.byIds.useQuery(
     (dislikedRestaurants ?? []).map(
-      (dislikedRestaurant) => dislikedRestaurant.restaurantId
+      (dislikedRestaurant) => dislikedRestaurant.restaurantId,
     ),
     {
       enabled: dislikedRestaurants !== undefined,
@@ -62,7 +62,7 @@ export default function Dashboard() {
           skipBatch: true,
         },
       },
-    }
+    },
   );
 
   const refetch = useCallback(async () => {
@@ -110,7 +110,7 @@ export default function Dashboard() {
     [...(favoriteRestaurants ?? []), ...(dislikedRestaurants ?? [])].forEach(
       (restaurant) => {
         counts[restaurant.restaurantId] = restaurant._count.restaurantItems;
-      }
+      },
     );
     return counts;
   }, [favoriteRestaurants, dislikedRestaurants]);
@@ -123,7 +123,7 @@ export default function Dashboard() {
           className={classNames(
             "rounded-xl bg-white p-4",
             "ring-white ring-opacity-60 ring-offset-2 ring-offset-indigo-400 focus:outline-none focus:ring-2",
-            "drop-shadow-md"
+            "drop-shadow-md",
           )}
         >
           <RestaurantsList
@@ -132,7 +132,7 @@ export default function Dashboard() {
             dishCountByRestaurantId={dishCountByRestaurantId}
           />
         </Tab.Panel>
-      )
+      ),
     );
   }, [data, dishCountByRestaurantId]);
 
@@ -152,7 +152,7 @@ export default function Dashboard() {
                       "ring-white ring-opacity-60 ring-offset-2 ring-offset-indigo-400 focus:outline-none focus:ring-2",
                       selected
                         ? "bg-white text-indigo-600 shadow"
-                        : "text-gray-600 hover:bg-white/60 hover:text-gray-900"
+                        : "text-gray-600 hover:bg-white/60 hover:text-gray-900",
                     )
                   }
                 >
@@ -170,7 +170,7 @@ export default function Dashboard() {
 }
 
 const groupRestaurantsByCity = (
-  restaurants: SnakeToCamelCaseNested<IYelpBusinessSchema>[]
+  restaurants: SnakeToCamelCaseNested<IYelpBusinessSchema>[],
 ) => {
   const restaurantsGroupedByCity: Record<string, typeof restaurants> = {};
   restaurants.forEach((restaurant) => {
@@ -187,7 +187,7 @@ const groupRestaurantsByCity = (
   Object.keys(restaurantsGroupedByCity).forEach((city) => {
     if (restaurantsGroupedByCity[city] !== undefined) {
       restaurantsGroupedByCity[city]?.sort((a, b) =>
-        a.name.localeCompare(b.name)
+        a.name.localeCompare(b.name),
       );
     }
   });

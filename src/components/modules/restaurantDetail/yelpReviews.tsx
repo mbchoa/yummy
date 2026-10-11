@@ -28,7 +28,7 @@ export const YelpReviews = ({ restaurantId, yelpUrl }: IYelpReviewsProps) => {
           skipBatch: true,
         },
       },
-    }
+    },
   );
 
   const renderReviews = () => {
@@ -64,7 +64,7 @@ export const YelpReviews = ({ restaurantId, yelpUrl }: IYelpReviewsProps) => {
           {review.user.imageUrl === undefined ||
           review.user.imageUrl === null ? (
             <div className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-slate-600">
-              <UserIcon className="block h-6 w-6 " aria-hidden />
+              <UserIcon className="block h-6 w-6" aria-hidden />
             </div>
           ) : (
             <Image
@@ -91,7 +91,7 @@ export const YelpReviews = ({ restaurantId, yelpUrl }: IYelpReviewsProps) => {
                   key={star}
                   className={classNames(
                     "h-4 w-4",
-                    star <= review.rating ? "text-red-600" : "text-gray-300"
+                    star <= review.rating ? "text-red-600" : "text-gray-300",
                   )}
                   aria-hidden
                 />

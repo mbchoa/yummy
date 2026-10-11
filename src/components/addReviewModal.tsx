@@ -21,7 +21,7 @@ export const AddReviewModal = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const { refetch } = trpc.foodReview.all.useQuery(
     { restaurantId },
-    { enabled: !!restaurantId }
+    { enabled: !!restaurantId },
   );
   const { mutateAsync: addFoodReview, isLoading: isAddingFoodReview } =
     trpc.foodReview.add.useMutation();
@@ -30,14 +30,14 @@ export const AddReviewModal = ({
     (event: React.ChangeEvent<HTMLInputElement>) => {
       setName(event.target.value);
     },
-    []
+    [],
   );
 
   const handleNoteChange = useCallback(
     (event: React.ChangeEvent<HTMLTextAreaElement>) => {
       setNote(event.target.value);
     },
-    []
+    [],
   );
 
   const handleAddFoodReview = useCallback(
@@ -57,7 +57,7 @@ export const AddReviewModal = ({
       setNote("");
       closeModal();
     },
-    [addFoodReview, closeModal, note, refetch, restaurantId, trimmedName]
+    [addFoodReview, closeModal, note, refetch, restaurantId, trimmedName],
   );
 
   return (

@@ -59,8 +59,8 @@ const Home: NextPage = () => {
               yum<span className="text-indigo-500">shin</span>
             </h1>
             <p className="max-w-xl text-lg text-gray-600 sm:text-xl">
-              Your personal journal of restaurants and the dishes worth
-              ordering again.
+              Your personal journal of restaurants and the dishes worth ordering
+              again.
             </p>
           </div>
           <button
@@ -82,10 +82,7 @@ const Home: NextPage = () => {
                 key={feature.name}
                 className="rounded-xl bg-white p-5 drop-shadow-md"
               >
-                <feature.icon
-                  className="h-7 w-7 text-indigo-500"
-                  aria-hidden
-                />
+                <feature.icon className="h-7 w-7 text-indigo-500" aria-hidden />
                 <h2 className="mt-3 font-medium text-gray-900">
                   {feature.name}
                 </h2>

@@ -38,11 +38,11 @@ export const YelpBusinessSchema = z.object({
             start: z.string(),
             end: z.string(),
             day: z.number(),
-          })
+          }),
         ),
         hours_type: z.string(),
         is_open_now: z.boolean(),
-      })
+      }),
     )
     .optional(),
   special_hours: z
@@ -53,7 +53,7 @@ export const YelpBusinessSchema = z.object({
         start: z.null(),
         end: z.null(),
         is_overnight: z.null(),
-      })
+      }),
     )
     .optional(),
   messaging: z
