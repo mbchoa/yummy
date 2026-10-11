@@ -23,6 +23,12 @@ const config = {
         protocol: "https",
         hostname: "*.fl.yelpcdn.com",
       },
+      // Auth0 user pictures: Gravatar (database/passwordless), Auth0's
+      // default-avatar CDN, and GitHub social connections.
+      { protocol: "https", hostname: "s.gravatar.com" },
+      { protocol: "https", hostname: "www.gravatar.com" },
+      { protocol: "https", hostname: "cdn.auth0.com" },
+      { protocol: "https", hostname: "avatars.githubusercontent.com" },
     ],
   },
 };
