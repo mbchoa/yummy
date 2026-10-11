@@ -43,7 +43,7 @@ Set this inside your .env file
 DATABASE_URL=postgresql://yumshin:yumshin@localhost:5455/yumshin
 ```
 
-From the root of the project run `pnpm install -r`. This should apply the migrations to your local DB.
+From the root of the project run `pnpm db:deploy` to apply the migrations to your local DB.
 
 ### Using Existing DB Data
 
@@ -57,6 +57,20 @@ In this case, we'll be using the dev instance.
 - Enter the password "yumshin" when prompted
 
 This should result in all tables being created and data being populated as they existed at the time of export.
+
+## Run Redis Locally
+
+The Yelp router caches API responses in Redis. Start a local instance:
+
+```shell
+docker run --name yumshin_redis -p 6379:6379 -d redis:7
+```
+
+Set this inside your .env file
+
+```dotenv
+RAILWAY_REDIS_URL=redis://localhost:6379
+```
 
 ## Production Migrations
 

@@ -24,7 +24,6 @@
     "@trpc/next": "^10.25.0",
     "@trpc/react-query": "^10.25.0",
     "@trpc/server": "^10.25.0",
-    "@upstash/redis": "^1.22.0",
     "classnames": "^2.3.2",
     "got": "^12.6.0",
     "ioredis": "^5.4.2",
