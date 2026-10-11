@@ -11,14 +11,13 @@ const withRoutes = createNextRouteConfig();
 /** @type {import("next").NextConfig} */
 const config = {
   reactStrictMode: true,
-  swcMinify: true,
   i18n: {
     locales: ["en"],
     defaultLocale: "en",
   },
   images: {
-    domains: ["lh3.googleusercontent.com"],
     remotePatterns: [
+      { protocol: "https", hostname: "lh3.googleusercontent.com" },
       {
         protocol: "https",
         hostname: "*.fl.yelpcdn.com",
