@@ -165,22 +165,34 @@ export default function RestaurantById() {
                 </>
               )}
             </address>
-            <div className="col-span-2 col-start-4 row-start-2 flex h-full w-full items-center justify-end">
+            <div className="col-span-2 col-start-3 row-start-2 flex h-full w-full items-center justify-end gap-1">
+              {!isLoading && (
+                <span className="mr-1 hidden text-sm text-gray-500 sm:inline">
+                  {like === Like.LIKE && "In your favorites"}
+                  {like === Like.DISLIKE && "In your dislikes"}
+                  {like === Like.UNSELECTED && "Not rated"}
+                </span>
+              )}
               <Button
                 size="sm"
                 color="primary"
                 variant="ghost"
                 disabled={isLoadingYelpRestaurant}
                 onClick={handleDislikeClick}
+                ariaLabel="Dislike restaurant"
+                ariaPressed={like === Like.DISLIKE}
+                title={
+                  like === Like.DISLIKE ? "Remove from dislikes" : "Dislike"
+                }
                 LeftIcon={
                   <HandThumbDownIcon
                     className={classNames(
                       "h-7 w-7",
-                      isLoading ||
-                        like === Like.UNSELECTED ||
-                        like === Like.LIKE
+                      isLoading
                         ? "fill-none stroke-gray-300"
-                        : "fill-red-500 stroke-slate-600"
+                        : like === Like.DISLIKE
+                        ? "fill-red-500 stroke-red-700"
+                        : "fill-none stroke-gray-500"
                     )}
                   />
                 }
@@ -191,15 +203,18 @@ export default function RestaurantById() {
                 variant="ghost"
                 disabled={isLoadingYelpRestaurant}
                 onClick={handleFavoriteClick}
+                ariaLabel="Like restaurant"
+                ariaPressed={like === Like.LIKE}
+                title={like === Like.LIKE ? "Remove from favorites" : "Like"}
                 LeftIcon={
                   <HandThumbUpIcon
                     className={classNames(
                       "h-7 w-7",
-                      isLoading ||
-                        like === Like.UNSELECTED ||
-                        like === Like.DISLIKE
+                      isLoading
                         ? "fill-none stroke-gray-300"
-                        : "fill-green-500 stroke-slate-600"
+                        : like === Like.LIKE
+                        ? "fill-green-500 stroke-green-700"
+                        : "fill-none stroke-gray-500"
                     )}
                   />
                 }
@@ -207,11 +222,21 @@ export default function RestaurantById() {
             </div>
           </div>
           <hr className="my-6" />
-          {like !== Like.UNSELECTED && (
+          {like !== Like.UNSELECTED ? (
             <FavoriteFoods openModal={openModal} restaurantId={restaurantId} />
+          ) : (
+            !isLoading && (
+              <section className="space-y-4">
+                <h2 className="text-xl font-medium">Personal Reviews</h2>
+                <p className="rounded border border-gray-300 p-4 text-sm text-gray-600">
+                  Rate this restaurant with a thumbs up or down to save it to
+                  your list. Then you can log the dishes you tried.
+                </p>
+              </section>
+            )
           )}
           <hr className="my-8" />
-          <YelpReviews restaurantId={restaurantId} />
+          <YelpReviews restaurantId={restaurantId} yelpUrl={restaurant?.url} />
         </div>
         <AddReviewModal
           isOpen={isAddReviewModalOpen}
