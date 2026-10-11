@@ -3,6 +3,13 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { protectedProcedure, router } from "../trpc";
 
+// notes are optional; a blank note is stored as null
+const noteSchema = z
+  .string()
+  .trim()
+  .max(500)
+  .transform((note) => (note.length > 0 ? note : null));
+
 export const foodReview = router({
   all: protectedProcedure
     .input(z.object({ restaurantId: z.string() }))
@@ -76,6 +83,7 @@ export const foodReview = router({
           .optional()
           .default("UNSELECTED"),
         name: z.string(),
+        review: noteSchema.optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -93,6 +101,7 @@ export const foodReview = router({
         return ctx.prisma.restaurantItemReview.create({
           data: {
             like: input.like,
+            review: input.review,
             restaurantItem: {
               connectOrCreate: {
                 where: {
@@ -145,6 +154,7 @@ export const foodReview = router({
       return ctx.prisma.restaurantItemReview.create({
         data: {
           like: input.like,
+          review: input.review,
           restaurantItem: {
             connectOrCreate: {
               where: {
@@ -179,7 +189,8 @@ export const foodReview = router({
     .input(
       z.object({
         id: z.string(),
-        like: z.enum(["LIKE", "DISLIKE", "UNSELECTED"]),
+        like: z.enum(["LIKE", "DISLIKE", "UNSELECTED"]).optional(),
+        review: noteSchema.optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -190,6 +201,7 @@ export const foodReview = router({
         },
         data: {
           like: input.like,
+          review: input.review,
         },
       });
     }),

@@ -5,7 +5,7 @@ import {
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import classNames from "classnames";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { trpc } from "../../../utils/trpc";
 import { Button } from "../../button";
 
@@ -32,8 +32,10 @@ export const FavoriteFoods = ({
     { enabled: !!restaurantId }
   );
   const isLoading = isFavoriteRestaurantLoading || isFoodReviewsLoading;
-  const { mutateAsync: updateFoodReview } =
+  const { mutateAsync: updateFoodReview, isLoading: isUpdatingFoodReview } =
     trpc.foodReview.update.useMutation();
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+  const [noteDraft, setNoteDraft] = useState("");
   const { mutateAsync: removeFoodReview } =
     trpc.foodReview.remove.useMutation();
 
@@ -62,6 +64,38 @@ export const FavoriteFoods = ({
       await refetchFoodReviews();
     },
     [removeFoodReview, refetchFoodReviews]
+  );
+
+  const handleEditNote = useCallback(
+    (foodReviewId: string, note: string | null) => () => {
+      setEditingNoteId(foodReviewId);
+      setNoteDraft(note ?? "");
+    },
+    []
+  );
+
+  const handleCancelNote = useCallback(() => {
+    setEditingNoteId(null);
+  }, []);
+
+  const handleNoteDraftChange = useCallback(
+    (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setNoteDraft(event.target.value);
+    },
+    []
+  );
+
+  const handleSaveNote = useCallback(
+    async (event: React.FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      if (editingNoteId === null) {
+        return;
+      }
+      await updateFoodReview({ id: editingNoteId, review: noteDraft });
+      await refetchFoodReviews();
+      setEditingNoteId(null);
+    },
+    [editingNoteId, noteDraft, refetchFoodReviews, updateFoodReview]
   );
 
   const maybeRenderBody = useCallback(() => {
@@ -125,9 +159,56 @@ export const FavoriteFoods = ({
         {foodReviews.map((foodReview) => (
           <li
             key={foodReview.restaurantItemId}
-            className="flex items-center justify-between"
+            className="flex items-start justify-between gap-4"
           >
-            <p>{foodReview.restaurantItem.name}</p>
+            <div className="min-w-0 flex-1">
+              <p>{foodReview.restaurantItem.name}</p>
+              {editingNoteId === foodReview.id ? (
+                <form className="mt-1 space-y-2" onSubmit={handleSaveNote}>
+                  <textarea
+                    className="w-full rounded text-sm"
+                    aria-label={`Note for ${foodReview.restaurantItem.name}`}
+                    rows={3}
+                    maxLength={500}
+                    value={noteDraft}
+                    onChange={handleNoteDraftChange}
+                    autoFocus
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      type="submit"
+                      isLoading={isUpdatingFoodReview}
+                    >
+                      Save
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      type="button"
+                      onClick={handleCancelNote}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </form>
+              ) : (
+                <div className="space-y-0.5">
+                  {foodReview.review !== null && (
+                    <p className="whitespace-pre-line text-sm text-gray-600">
+                      {foodReview.review}
+                    </p>
+                  )}
+                  <button
+                    type="button"
+                    className="text-xs text-indigo-600 hover:underline"
+                    onClick={handleEditNote(foodReview.id, foodReview.review)}
+                  >
+                    {foodReview.review !== null ? "Edit note" : "Add note"}
+                  </button>
+                </div>
+              )}
+            </div>
             <div className="flex items-center space-x-2">
               <Button
                 size="sm"
@@ -174,6 +255,13 @@ export const FavoriteFoods = ({
     handleRemoveFoodReview,
     openModal,
     isLoading,
+    editingNoteId,
+    noteDraft,
+    isUpdatingFoodReview,
+    handleSaveNote,
+    handleNoteDraftChange,
+    handleCancelNote,
+    handleEditNote,
   ]);
 
   return (
