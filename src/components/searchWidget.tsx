@@ -12,20 +12,24 @@ export const SearchWidget = () => {
   const [isFocused, setIsFocused] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
-  const { data, refetch, isFetching, isError } = trpc.yelp.search.useQuery(
-    {
-      location,
-      term: searchTerm,
-    },
-    {
-      enabled: false,
-      trpc: {
-        context: {
-          skipBatch: true,
-        },
+  const { data, refetch, isFetching, isError, error } =
+    trpc.yelp.search.useQuery(
+      {
+        location,
+        term: searchTerm,
       },
-    }
-  );
+      {
+        enabled: false,
+        // don't retry searches Yelp rejected (4xx); retry server errors as usual
+        retry: (failureCount, error) =>
+          (error.data?.httpStatus ?? 500) >= 500 && failureCount < 3,
+        trpc: {
+          context: {
+            skipBatch: true,
+          },
+        },
+      }
+    );
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -38,9 +42,12 @@ export const SearchWidget = () => {
 
   const renderSearchResultsContent = useCallback(() => {
     if (isError) {
+      const isClientError = (error.data?.httpStatus ?? 500) < 500;
       return (
         <p className="px-4 py-3 text-sm text-gray-500">
-          Couldn&apos;t search right now. Check the location and try again.
+          {isClientError
+            ? error.message
+            : "Couldn't search right now. Check the location and try again."}
         </p>
       );
     }
@@ -110,7 +117,7 @@ export const SearchWidget = () => {
         })}
       </ul>
     );
-  }, [data, isError, isFetching, searchTerm, location]);
+  }, [data, error, isError, isFetching, searchTerm, location]);
 
   const maybeRenderSearchResults = useCallback(() => {
     if (searchTerm.length === 0 || location.length === 0 || !isFocused) {
