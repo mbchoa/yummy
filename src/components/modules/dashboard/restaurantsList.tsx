@@ -1,4 +1,6 @@
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
+import { StarIcon } from "@heroicons/react/24/solid";
+import Image from "next/image";
 import Link from "next/link";
 import type { IYelpBusinessSchema } from "../../../models/YelpSchemas";
 
@@ -7,11 +9,13 @@ interface IRestaurantsListProps {
   restaurants:
     | Record<string, SnakeToCamelCaseNested<IYelpBusinessSchema>[]>
     | undefined;
+  dishCountByRestaurantId: Record<string, number>;
 }
 
 export const RestaurantsList = ({
   isLoading,
   restaurants,
+  dishCountByRestaurantId,
 }: IRestaurantsListProps) => {
   if (isLoading) {
     return (
@@ -19,12 +23,15 @@ export const RestaurantsList = ({
         {[1, 2].map((key) => (
           <section key={key} className="space-y-2">
             <h2 className="h-7 w-1/2 animate-pulse rounded bg-gray-200 text-xl" />
-            <ul className="space-y-2">
-              {[1, 2, 3, 4, 5].map((key) => (
-                <li
-                  key={key}
-                  className="h-5 w-3/4 animate-pulse rounded bg-gray-200"
-                />
+            <ul className="divide-y divide-gray-100">
+              {[1, 2, 3].map((key) => (
+                <li key={key} className="flex items-center gap-3 py-2">
+                  <div className="h-12 w-12 shrink-0 animate-pulse rounded bg-gray-200" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 w-1/2 animate-pulse rounded bg-gray-200" />
+                    <div className="h-3 w-1/3 animate-pulse rounded bg-gray-200" />
+                  </div>
+                </li>
               ))}
             </ul>
           </section>
@@ -50,20 +57,49 @@ export const RestaurantsList = ({
     <div className="space-y-6">
       {Object.keys(restaurants).map((city) => {
         return (
-          <section className="space-y-2" key={city}>
-            <h2 className="text-xl">{city}</h2>
-            <ul className="space-y-2">
+          <section className="space-y-1" key={city}>
+            <h2 className="text-lg font-medium text-gray-900">{city}</h2>
+            <ul className="divide-y divide-gray-100">
               {(restaurants?.[city] ?? []).map((restaurant) => {
+                const dishCount = dishCountByRestaurantId[restaurant.id] ?? 0;
                 return (
                   <li key={restaurant.id}>
                     <Link
-                      className="inline-flex h-min items-center rounded-md border border-transparent py-2 text-sm font-medium text-indigo-600 focus:outline-none"
+                      className="-mx-2 flex items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-indigo-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
                       href={{
                         pathname: `/dashboard/restaurant/[restaurantId]`,
                         query: { restaurantId: restaurant.id },
                       }}
                     >
-                      {restaurant.name}
+                      {restaurant.imageUrl ? (
+                        <Image
+                          className="h-12 w-12 shrink-0 rounded object-cover"
+                          src={restaurant.imageUrl}
+                          alt=""
+                          width={48}
+                          height={48}
+                        />
+                      ) : (
+                        <div className="h-12 w-12 shrink-0 rounded bg-gray-200" />
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-baseline justify-between gap-2">
+                          <span className="truncate font-medium text-indigo-600">
+                            {restaurant.name}
+                          </span>
+                          <span className="flex shrink-0 items-center gap-1 text-sm text-gray-600">
+                            <StarIcon
+                              className="h-4 w-4 text-yellow-500"
+                              aria-hidden
+                            />
+                            {restaurant.rating}
+                          </span>
+                        </div>
+                        <p className="truncate text-sm text-gray-500">
+                          {restaurant.location.address1} &middot; {dishCount}{" "}
+                          {dishCount === 1 ? "dish" : "dishes"} logged
+                        </p>
+                      </div>
                     </Link>
                   </li>
                 );

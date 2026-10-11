@@ -29,11 +29,11 @@ export const Layout: React.FC<IDashboardLayoutProps> = ({ children }) => {
       <Disclosure as="nav" className="bg-gray-800">
         {({ open }) => (
           <>
-            <div className="px-4">
+            <div className="mx-auto max-w-5xl px-4">
               <div className="relative flex h-16 items-center">
                 <header className="hidden px-4 font-semibold tracking-wide text-white sm:block">
                   <span>yum</span>
-                  <span className="text-[hsl(280,100%,70%)]">shin</span>
+                  <span className="text-indigo-400">shin</span>
                 </header>
                 <div className="absolute inset-y-0 left-0 flex items-center sm:hidden">
                   {/* Mobile menu button*/}
@@ -47,7 +47,7 @@ export const Layout: React.FC<IDashboardLayoutProps> = ({ children }) => {
                   </Disclosure.Button>
                   <header className=" px-4 font-semibold tracking-wide text-white sm:hidden">
                     <span>yum</span>
-                    <span className="text-[hsl(280,100%,70%)]">shin</span>
+                    <span className="text-indigo-400">shin</span>
                   </header>
                 </div>
                 <div className="flex w-full justify-between">
@@ -147,7 +147,7 @@ export const Layout: React.FC<IDashboardLayoutProps> = ({ children }) => {
           </>
         )}
       </Disclosure>
-      <main className="h-full">{children}</main>
+      <main className="mx-auto h-full max-w-5xl">{children}</main>
     </>
   );
 };

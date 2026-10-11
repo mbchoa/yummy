@@ -28,6 +28,11 @@ export const favoriteRestaurant = router({
             userId: ctx.session.user.id,
             like: input?.like ?? undefined,
           },
+          include: {
+            _count: {
+              select: { restaurantItems: true },
+            },
+          },
         });
       }
 
@@ -53,6 +58,11 @@ export const favoriteRestaurant = router({
         where: {
           userId: selectedUserId,
           like: input?.like ?? undefined,
+        },
+        include: {
+          _count: {
+            select: { restaurantItems: true },
+          },
         },
       });
     }),
