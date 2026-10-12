@@ -88,15 +88,20 @@ function RestaurantDetail() {
   const { mutateAsync: removeRestaurant, isLoading: isRemovingRestaurant } =
     trpc.favoriteRestaurant.remove.useMutation();
 
+  const utils = trpc.useContext();
   const handleRemoveRestaurant = useCallback(async () => {
     await removeRestaurant({ id: restaurantId });
+    // so coming back to this restaurant doesn't briefly show it as still saved
+    utils.favoriteRestaurant.byId.setData({ id: restaurantId }, null);
     await router.push("/dashboard");
-  }, [removeRestaurant, restaurantId, router]);
+  }, [removeRestaurant, restaurantId, router, utils]);
   const [like, setLike] = useState<Like>(Like.UNSELECTED);
 
+  // follow the server once it has answered, including when the restaurant
+  // isn't saved (null), so a stale rating can't outlive a removal
   useEffect(() => {
-    if (savedRestaurant) {
-      setLike(savedRestaurant.like);
+    if (savedRestaurant !== undefined) {
+      setLike(savedRestaurant?.like ?? Like.UNSELECTED);
     }
   }, [savedRestaurant]);
 
