@@ -28,7 +28,10 @@ export const AddReviewModal = ({
     isLoading: isAddingFoodReview,
     error: addFoodReviewError,
     reset: resetAddFoodReview,
-  } = trpc.foodReview.add.useMutation();
+  } = trpc.foodReview.add.useMutation({
+    // the error is shown below the dish name instead
+    meta: { skipErrorToast: true },
+  });
   const trimmedName = name.trim();
   const handleChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
