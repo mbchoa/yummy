@@ -9,12 +9,15 @@ interface IRestaurantsListProps {
   restaurants:
     | Record<string, SnakeToCamelCaseNested<IYelpBusinessSchema>[]>
     | undefined;
+  // saved restaurants Yelp no longer has, so there are no details to show
+  missingRestaurantIds: string[];
   dishCountByRestaurantId: Record<string, number>;
 }
 
 export const RestaurantsList = ({
   isLoading,
   restaurants,
+  missingRestaurantIds,
   dishCountByRestaurantId,
 }: IRestaurantsListProps) => {
   if (isLoading) {
@@ -44,7 +47,10 @@ export const RestaurantsList = ({
     return <p className="px-4">Unable to fetch favorite restaurants.</p>;
   }
 
-  if (Object.keys(restaurants).length === 0) {
+  if (
+    Object.keys(restaurants).length === 0 &&
+    missingRestaurantIds.length === 0
+  ) {
     return (
       <div className="flex h-60 flex-col items-center justify-center space-y-4">
         <InformationCircleIcon className="h-10 w-10 text-gray-400" />
@@ -108,6 +114,40 @@ export const RestaurantsList = ({
           </section>
         );
       })}
+      {missingRestaurantIds.length > 0 && (
+        <section className="space-y-1">
+          <h2 className="text-lg font-medium text-gray-900">
+            No longer on Yelp
+          </h2>
+          <ul className="divide-y divide-gray-100">
+            {missingRestaurantIds.map((restaurantId) => {
+              const dishCount = dishCountByRestaurantId[restaurantId] ?? 0;
+              return (
+                <li key={restaurantId}>
+                  <Link
+                    className="-mx-2 flex items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-indigo-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                    href={{
+                      pathname: `/dashboard/restaurant/[restaurantId]`,
+                      query: { restaurantId },
+                    }}
+                  >
+                    <div className="h-12 w-12 shrink-0 rounded bg-gray-200" />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-medium text-gray-600">
+                        Restaurant removed from Yelp
+                      </p>
+                      <p className="truncate text-sm text-gray-500">
+                        {dishCount} {dishCount === 1 ? "dish" : "dishes"} logged
+                        &middot; view or remove
+                      </p>
+                    </div>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
     </div>
   );
 };

@@ -23,6 +23,7 @@ export default function Dashboard() {
   const {
     data: likedYelpRestaurants,
     isLoading: isLoadingFavoriteYelpRestaurants,
+    isPreviousData: isPreviousLikedYelpRestaurants,
     refetch: refetchLikedYelpRestaurants,
   } = trpc.yelp.byIds.useQuery(
     (favoriteRestaurants ?? []).map(
@@ -49,6 +50,7 @@ export default function Dashboard() {
   const {
     data: dislikedYelpRestaurants,
     isLoading: isLoadingDislikedYelpRestaurants,
+    isPreviousData: isPreviousDislikedYelpRestaurants,
     refetch: refetchDislikedYelpRestaurants,
   } = trpc.yelp.byIds.useQuery(
     (dislikedRestaurants ?? []).map(
@@ -84,6 +86,11 @@ export default function Dashboard() {
           likedYelpRestaurants !== undefined
             ? groupRestaurantsByCity(likedYelpRestaurants)
             : undefined,
+        missingRestaurantIds: findMissingRestaurantIds(
+          favoriteRestaurants,
+          likedYelpRestaurants,
+          isPreviousLikedYelpRestaurants,
+        ),
         isLoading:
           isLoadingFavoriteRestaurants || isLoadingFavoriteYelpRestaurants,
       },
@@ -92,16 +99,25 @@ export default function Dashboard() {
           dislikedYelpRestaurants !== undefined
             ? groupRestaurantsByCity(dislikedYelpRestaurants)
             : undefined,
+        missingRestaurantIds: findMissingRestaurantIds(
+          dislikedRestaurants,
+          dislikedYelpRestaurants,
+          isPreviousDislikedYelpRestaurants,
+        ),
         isLoading:
           isLoadingDislikedRestaurants || isLoadingDislikedYelpRestaurants,
       },
     };
   }, [
+    dislikedRestaurants,
     dislikedYelpRestaurants,
+    favoriteRestaurants,
     isLoadingDislikedRestaurants,
     isLoadingDislikedYelpRestaurants,
     isLoadingFavoriteRestaurants,
     isLoadingFavoriteYelpRestaurants,
+    isPreviousDislikedYelpRestaurants,
+    isPreviousLikedYelpRestaurants,
     likedYelpRestaurants,
   ]);
 
@@ -117,7 +133,7 @@ export default function Dashboard() {
 
   const maybeRenderPanels = useCallback(() => {
     return Object.values(data).map(
-      ({ isLoading, restaurantsGroupedByCity }, idx) => (
+      ({ isLoading, restaurantsGroupedByCity, missingRestaurantIds }, idx) => (
         <Tab.Panel
           key={idx}
           className={classNames(
@@ -129,6 +145,7 @@ export default function Dashboard() {
           <RestaurantsList
             isLoading={isLoading}
             restaurants={restaurantsGroupedByCity}
+            missingRestaurantIds={missingRestaurantIds}
             dishCountByRestaurantId={dishCountByRestaurantId}
           />
         </Tab.Panel>
@@ -168,6 +185,28 @@ export default function Dashboard() {
     </Layout>
   );
 }
+
+// saved restaurants that Yelp no longer has; yelp.byIds skips them, so they
+// would otherwise vanish from the dashboard
+const findMissingRestaurantIds = (
+  savedRestaurants: { restaurantId: string }[] | undefined,
+  yelpRestaurants: { id: string }[] | undefined,
+  isPreviousData: boolean,
+) => {
+  // while Yelp data from the previous list is still shown, the two lists don't
+  // correspond
+  if (
+    savedRestaurants === undefined ||
+    yelpRestaurants === undefined ||
+    isPreviousData
+  ) {
+    return [];
+  }
+  const yelpIds = new Set(yelpRestaurants.map((restaurant) => restaurant.id));
+  return savedRestaurants
+    .map((restaurant) => restaurant.restaurantId)
+    .filter((restaurantId) => !yelpIds.has(restaurantId));
+};
 
 const groupRestaurantsByCity = (
   restaurants: SnakeToCamelCaseNested<IYelpBusinessSchema>[],
