@@ -4,6 +4,7 @@ import {
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import classNames from "classnames";
+import { useSession } from "next-auth/react";
 import { useCallback, useState } from "react";
 import { trpc, type RouterOutputs } from "../../../utils/trpc";
 import { Button } from "../../button";
@@ -20,6 +21,7 @@ export const FavoriteFoods = ({
   openModal,
   restaurantId,
 }: IFavoriteFoodsProps) => {
+  const { data: session } = useSession();
   const { data: favoriteRestaurant, isLoading: isFavoriteRestaurantLoading } =
     trpc.favoriteRestaurant.byId.useQuery(
       { id: restaurantId },
@@ -183,6 +185,12 @@ export const FavoriteFoods = ({
             >
               <div className="min-w-0 flex-1">
                 <p>{foodReview.restaurantItem.name}</p>
+                {foodReview.reviewedBy !== null &&
+                  foodReview.reviewedBy.id !== session?.user?.id && (
+                    <p className="text-xs text-gray-500">
+                      Logged by {foodReview.reviewedBy.name ?? "a collaborator"}
+                    </p>
+                  )}
                 {editingNoteId === foodReview.id ? (
                   <form className="mt-1 space-y-2" onSubmit={handleSaveNote}>
                     <textarea
@@ -279,6 +287,7 @@ export const FavoriteFoods = ({
   }, [
     favoriteRestaurant,
     foodReviews,
+    session,
     handleDislikeFoodReview,
     handleLikeFoodReview,
     handleRemoveFoodReview,
