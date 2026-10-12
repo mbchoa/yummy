@@ -16,7 +16,14 @@ import { YelpReviews } from "../../../components/modules/restaurantDetail/yelpRe
 import { retryServerErrors } from "../../../utils/retryServerErrors";
 import { trpc } from "../../../utils/trpc";
 
+// keyed by restaurant, so moving between restaurants (e.g. from search) starts
+// with fresh state instead of the previous restaurant's rating and forms
 export default function RestaurantById() {
+  const { query } = useRouter<"/dashboard/restaurant/[restaurantId]">();
+  return <RestaurantDetail key={query.restaurantId} />;
+}
+
+function RestaurantDetail() {
   // modal
   const [isAddReviewModalOpen, setIsAddReviewModalOpen] = useState(false);
   const closeModal = useCallback(() => {

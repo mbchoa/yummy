@@ -6,7 +6,6 @@ import { useCallback, useMemo } from "react";
 import { Layout } from "../../components/layout";
 import { ListDropDown } from "../../components/modules/dashboard/listDropdown";
 import { RestaurantsList } from "../../components/modules/dashboard/restaurantsList";
-import { SearchWidget } from "../../components/searchWidget";
 import type { IYelpBusinessSchema } from "../../models/YelpSchemas";
 import { trpc } from "../../utils/trpc";
 
@@ -155,7 +154,6 @@ export default function Dashboard() {
 
   return (
     <Layout>
-      <SearchWidget />
       <div className="px-4">
         <Tab.Group>
           <div className="flex items-center justify-between gap-4">
