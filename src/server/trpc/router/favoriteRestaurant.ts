@@ -83,12 +83,23 @@ export const favoriteRestaurant = router({
 
       const { selectedUserId } = ctx.session.user.settings;
 
+      // upsert, so a repeated request (e.g. a double-click) sets the rating
+      // instead of failing on the primary key
       // check if selected user is the same as the user
       if (selectedUserId === ctx.session.user.id) {
-        return ctx.prisma.favoriteRestaurant.create({
-          data: {
+        return ctx.prisma.favoriteRestaurant.upsert({
+          where: {
+            restaurantId_userId: {
+              restaurantId: input.id,
+              userId: ctx.session.user.id,
+            },
+          },
+          create: {
             restaurantId: input.id,
             userId: ctx.session.user.id,
+            like: input.like,
+          },
+          update: {
             like: input.like,
           },
         });
@@ -112,10 +123,19 @@ export const favoriteRestaurant = router({
         });
       }
 
-      return ctx.prisma.favoriteRestaurant.create({
-        data: {
+      return ctx.prisma.favoriteRestaurant.upsert({
+        where: {
+          restaurantId_userId: {
+            restaurantId: input.id,
+            userId: selectedUserId,
+          },
+        },
+        create: {
           restaurantId: input.id,
           userId: selectedUserId,
+          like: input.like,
+        },
+        update: {
           like: input.like,
         },
       });
