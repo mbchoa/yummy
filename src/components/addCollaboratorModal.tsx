@@ -21,11 +21,13 @@ export const AddCollaboratorModal = ({
   const [selectedCollaboratorId, setSelectedCollaboratorId] =
     useState<string>("");
   const inputRef = useRef<HTMLInputElement>(null);
+  // the server ignores searches shorter than this
+  const isSearchTooShort = search.replace(/\s/g, "").length < 3;
   const { data: searchResults, isFetching: isSearching } =
     trpc.user.search.useQuery(
       { term: search },
       {
-        enabled: search.length > 0,
+        enabled: !isSearchTooShort,
       },
     );
   const { data: allCollaborators, refetch: refetchCollaborators } =
@@ -41,7 +43,10 @@ export const AddCollaboratorModal = ({
   );
 
   const handleSelectCollaborator = useCallback(
-    (user: User, event: React.MouseEvent<HTMLButtonElement>) => {
+    (
+      user: Pick<User, "id" | "name" | "email">,
+      event: React.MouseEvent<HTMLButtonElement>,
+    ) => {
       event.preventDefault();
       setSearch(user.name ?? user.email ?? "Unknown");
       setSelectedCollaboratorId(user.id);
@@ -64,6 +69,17 @@ export const AddCollaboratorModal = ({
   );
 
   const maybeRenderSearchResults = useCallback(() => {
+    if (isSearchTooShort) {
+      if (search.length === 0 || selectedCollaboratorId !== "") {
+        return null;
+      }
+      return (
+        <p className="mt-4 text-sm text-gray-500">
+          Type at least 3 characters to search.
+        </p>
+      );
+    }
+
     if (searchResults === undefined || searchResults === null) {
       return null;
     }
@@ -139,6 +155,7 @@ export const AddCollaboratorModal = ({
     searchResults,
     allCollaborators,
     isSearching,
+    isSearchTooShort,
     search,
     selectedCollaboratorId,
   ]);

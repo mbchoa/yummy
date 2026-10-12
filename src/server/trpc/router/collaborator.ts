@@ -31,6 +31,13 @@ export const collaborator = router({
       }),
     )
     .mutation(({ input, ctx }) => {
+      if (input.collaboratorId === ctx.session.user.id) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "You can't add yourself as a collaborator",
+        });
+      }
+
       return ctx.prisma.collaborator.create({
         data: {
           ownerId: ctx.session.user.id,
