@@ -1,7 +1,23 @@
-import { Like } from "@prisma/client";
+import { Like, type Prisma } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { protectedProcedure, router } from "../trpc";
+
+// what the dashboard rows show: how many dishes are logged and which ones are
+// liked. Removing a dish deletes its review but leaves the dish itself, so
+// only dishes that still have a review count.
+const dashboardInclude = {
+  _count: {
+    select: {
+      restaurantItems: { where: { restaurantItemReview: { some: {} } } },
+    },
+  },
+  restaurantItems: {
+    where: { restaurantItemReview: { some: { like: Like.LIKE } } },
+    select: { name: true },
+    orderBy: { createdAt: "asc" },
+  },
+} satisfies Prisma.FavoriteRestaurantInclude;
 
 export const favoriteRestaurant = router({
   all: protectedProcedure
@@ -28,11 +44,7 @@ export const favoriteRestaurant = router({
             userId: ctx.session.user.id,
             like: input?.like ?? undefined,
           },
-          include: {
-            _count: {
-              select: { restaurantItems: true },
-            },
-          },
+          include: dashboardInclude,
         });
       }
 
@@ -59,11 +71,7 @@ export const favoriteRestaurant = router({
           userId: selectedUserId,
           like: input?.like ?? undefined,
         },
-        include: {
-          _count: {
-            select: { restaurantItems: true },
-          },
-        },
+        include: dashboardInclude,
       });
     }),
   add: protectedProcedure
