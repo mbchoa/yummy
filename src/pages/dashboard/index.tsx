@@ -2,7 +2,8 @@ import { Tab } from "@headlessui/react";
 import { Like } from "@prisma/client";
 import classNames from "classnames";
 import { useSession } from "next-auth/react";
-import { useCallback, useMemo } from "react";
+import { useRouter } from "next/router";
+import { useCallback, useMemo, useState } from "react";
 import { Layout } from "../../components/layout";
 import { ListDropDown } from "../../components/modules/dashboard/listDropdown";
 import { RestaurantsList } from "../../components/modules/dashboard/restaurantsList";
@@ -10,8 +11,28 @@ import type { IYelpBusinessSchema } from "../../models/YelpSchemas";
 import { requireAuth } from "../../server/common/require-auth";
 import { trpc } from "../../utils/trpc";
 
+const TABS = ["Favorites", "Dislikes"] as const;
+
 export default function Dashboard() {
   const { data: session } = useSession();
+  const router = useRouter<"/dashboard">();
+  // the selected tab lives in the URL, so refresh and back keep it
+  const selectedTabIndex = router.query.tab === "dislikes" ? 1 : 0;
+  const handleTabChange = useCallback(
+    (index: number) => {
+      router.replace(
+        {
+          pathname: "/dashboard",
+          query: index === 1 ? { tab: "dislikes" } : {},
+        },
+        undefined,
+        { shallow: true },
+      );
+    },
+    [router],
+  );
+  const [filter, setFilter] = useState("");
+  const normalizedFilter = filter.trim().toLowerCase();
   const {
     data: favoriteRestaurants,
     isLoading: isLoadingFavoriteRestaurants,
@@ -79,17 +100,56 @@ export default function Dashboard() {
     refetchLikedYelpRestaurants,
   ]);
 
+  const likedDishNamesByRestaurantId = useMemo(() => {
+    const names: Record<string, string[]> = {};
+    [...(favoriteRestaurants ?? []), ...(dislikedRestaurants ?? [])].forEach(
+      (restaurant) => {
+        names[restaurant.restaurantId] = restaurant.restaurantItems.map(
+          (restaurantItem) => restaurantItem.name,
+        );
+      },
+    );
+    return names;
+  }, [favoriteRestaurants, dislikedRestaurants]);
+
   const data = useMemo(() => {
+    const matchesDishes = (restaurantId: string) =>
+      (likedDishNamesByRestaurantId[restaurantId] ?? []).some((name) =>
+        name.toLowerCase().includes(normalizedFilter),
+      );
+    // matches the restaurant's name, city, categories or liked dishes
+    const filterRestaurants = (
+      restaurants: SnakeToCamelCaseNested<IYelpBusinessSchema>[],
+    ) =>
+      normalizedFilter.length === 0
+        ? restaurants
+        : restaurants.filter(
+            (restaurant) =>
+              [
+                restaurant.name,
+                restaurant.location.city,
+                ...restaurant.categories.map((category) => category.title),
+              ].some((text) => text.toLowerCase().includes(normalizedFilter)) ||
+              matchesDishes(restaurant.id),
+          );
+    // missing restaurants have no Yelp details, so only their dishes can match
+    const filterMissing = (restaurantIds: string[]) =>
+      normalizedFilter.length === 0
+        ? restaurantIds
+        : restaurantIds.filter(matchesDishes);
+
     return {
       Favorites: {
         restaurantsGroupedByCity:
           likedYelpRestaurants !== undefined
-            ? groupRestaurantsByCity(likedYelpRestaurants)
+            ? groupRestaurantsByCity(filterRestaurants(likedYelpRestaurants))
             : undefined,
-        missingRestaurantIds: findMissingRestaurantIds(
-          favoriteRestaurants,
-          likedYelpRestaurants,
-          isPreviousLikedYelpRestaurants,
+        missingRestaurantIds: filterMissing(
+          findMissingRestaurantIds(
+            favoriteRestaurants,
+            likedYelpRestaurants,
+            isPreviousLikedYelpRestaurants,
+          ),
         ),
         isLoading:
           isLoadingFavoriteRestaurants || isLoadingFavoriteYelpRestaurants,
@@ -97,12 +157,14 @@ export default function Dashboard() {
       Dislikes: {
         restaurantsGroupedByCity:
           dislikedYelpRestaurants !== undefined
-            ? groupRestaurantsByCity(dislikedYelpRestaurants)
+            ? groupRestaurantsByCity(filterRestaurants(dislikedYelpRestaurants))
             : undefined,
-        missingRestaurantIds: findMissingRestaurantIds(
-          dislikedRestaurants,
-          dislikedYelpRestaurants,
-          isPreviousDislikedYelpRestaurants,
+        missingRestaurantIds: filterMissing(
+          findMissingRestaurantIds(
+            dislikedRestaurants,
+            dislikedYelpRestaurants,
+            isPreviousDislikedYelpRestaurants,
+          ),
         ),
         isLoading:
           isLoadingDislikedRestaurants || isLoadingDislikedYelpRestaurants,
@@ -118,7 +180,9 @@ export default function Dashboard() {
     isLoadingFavoriteYelpRestaurants,
     isPreviousDislikedYelpRestaurants,
     isPreviousLikedYelpRestaurants,
+    likedDishNamesByRestaurantId,
     likedYelpRestaurants,
+    normalizedFilter,
   ]);
 
   const dishCountByRestaurantId = useMemo(() => {
@@ -147,19 +211,26 @@ export default function Dashboard() {
             restaurants={restaurantsGroupedByCity}
             missingRestaurantIds={missingRestaurantIds}
             dishCountByRestaurantId={dishCountByRestaurantId}
+            likedDishNamesByRestaurantId={likedDishNamesByRestaurantId}
+            isFiltered={normalizedFilter.length > 0}
           />
         </Tab.Panel>
       ),
     );
-  }, [data, dishCountByRestaurantId]);
+  }, [
+    data,
+    dishCountByRestaurantId,
+    likedDishNamesByRestaurantId,
+    normalizedFilter,
+  ]);
 
   return (
     <Layout>
       <div className="px-4">
-        <Tab.Group>
+        <Tab.Group selectedIndex={selectedTabIndex} onChange={handleTabChange}>
           <div className="flex items-center justify-between gap-4">
             <Tab.List className="flex space-x-1 rounded-xl bg-gray-200 p-1">
-              {["Favorites", "Dislikes"].map((category) => (
+              {TABS.map((category) => (
                 <Tab
                   key={category}
                   className={({ selected }) =>
@@ -178,6 +249,16 @@ export default function Dashboard() {
             </Tab.List>
             <ListDropDown onSwitchUser={refetch} />
           </div>
+          <label className="mt-4 block">
+            <span className="sr-only">Filter your list</span>
+            <input
+              type="search"
+              className="w-full rounded border px-3 py-2 text-sm outline-indigo-500"
+              placeholder="Filter by name, city, cuisine or dish"
+              value={filter}
+              onChange={(event) => setFilter(event.target.value)}
+            />
+          </label>
           <Tab.Panels className="mt-4">{maybeRenderPanels()}</Tab.Panels>
         </Tab.Group>
       </div>

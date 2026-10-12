@@ -158,6 +158,7 @@ export const SearchWidget = () => {
               Search restaurants
             </Combobox.Label>
             <Combobox.Input
+              id="restaurant-search"
               className="w-full rounded border px-3 py-2 outline-indigo-500"
               onChange={handleSearchChange}
               // nothing stays selected, so without this the input is cleared

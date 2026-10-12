@@ -12,13 +12,23 @@ interface IRestaurantsListProps {
   // saved restaurants Yelp no longer has, so there are no details to show
   missingRestaurantIds: string[];
   dishCountByRestaurantId: Record<string, number>;
+  likedDishNamesByRestaurantId: Record<string, string[]>;
+  // a filter is active, so an empty list means nothing matched
+  isFiltered: boolean;
 }
+
+// the search box is in the page layout
+const focusRestaurantSearch = () => {
+  document.getElementById("restaurant-search")?.focus();
+};
 
 export const RestaurantsList = ({
   isLoading,
   restaurants,
   missingRestaurantIds,
   dishCountByRestaurantId,
+  likedDishNamesByRestaurantId,
+  isFiltered,
 }: IRestaurantsListProps) => {
   if (isLoading) {
     return (
@@ -51,10 +61,27 @@ export const RestaurantsList = ({
     Object.keys(restaurants).length === 0 &&
     missingRestaurantIds.length === 0
   ) {
+    if (isFiltered) {
+      return (
+        <p className="py-8 text-center text-sm text-gray-600">
+          No restaurants match your filter.
+        </p>
+      );
+    }
     return (
-      <div className="flex h-60 flex-col items-center justify-center space-y-4">
+      <div className="flex h-60 flex-col items-center justify-center space-y-4 text-center">
         <InformationCircleIcon className="h-10 w-10 text-gray-400" />
         <p>No restaurants added yet.</p>
+        <p className="text-sm text-gray-600">
+          Find one with search, then rate it 👍 or 👎 to save it here.
+        </p>
+        <button
+          type="button"
+          className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2"
+          onClick={focusRestaurantSearch}
+        >
+          Search for a restaurant
+        </button>
       </div>
     );
   }
@@ -68,6 +95,8 @@ export const RestaurantsList = ({
             <ul className="divide-y divide-gray-100">
               {(restaurants?.[city] ?? []).map((restaurant) => {
                 const dishCount = dishCountByRestaurantId[restaurant.id] ?? 0;
+                const likedDishNames =
+                  likedDishNamesByRestaurantId[restaurant.id] ?? [];
                 return (
                   <li key={restaurant.id}>
                     <Link
@@ -105,6 +134,13 @@ export const RestaurantsList = ({
                           {restaurant.location.address1} &middot; {dishCount}{" "}
                           {dishCount === 1 ? "dish" : "dishes"} logged
                         </p>
+                        {likedDishNames.length > 0 && (
+                          <p className="truncate text-sm text-green-800">
+                            <span aria-hidden>👍 </span>
+                            <span className="sr-only">Liked dishes: </span>
+                            {likedDishNames.join(", ")}
+                          </p>
+                        )}
                       </div>
                     </Link>
                   </li>
