@@ -9,6 +9,7 @@ import { signOut } from "next-auth/react";
 import Image from "next/image";
 import React, { Fragment } from "react";
 import { useRequireAuth } from "../hooks/useRequireAuth";
+import { SearchWidget } from "./searchWidget";
 
 interface IDashboardLayoutProps {
   children: React.ReactNode;
@@ -147,7 +148,10 @@ export const Layout: React.FC<IDashboardLayoutProps> = ({ children }) => {
           </>
         )}
       </Disclosure>
-      <main className="mx-auto h-full max-w-5xl">{children}</main>
+      <main className="mx-auto h-full max-w-5xl">
+        <SearchWidget />
+        {children}
+      </main>
     </>
   );
 };
