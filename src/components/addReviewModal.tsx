@@ -1,6 +1,11 @@
 import { Dialog, Transition } from "@headlessui/react";
-import { XMarkIcon } from "@heroicons/react/24/outline";
+import {
+  HandThumbDownIcon,
+  HandThumbUpIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
 import { Like } from "@prisma/client";
+import classNames from "classnames";
 import React, { Fragment, useCallback, useRef, useState } from "react";
 import { trpc } from "../utils/trpc";
 import { Button } from "./button";
@@ -18,6 +23,7 @@ export const AddReviewModal = ({
 }: IAddReviewModalProps) => {
   const [name, setName] = useState("");
   const [note, setNote] = useState("");
+  const [like, setLike] = useState<Like>(Like.LIKE);
   const inputRef = useRef<HTMLInputElement>(null);
   const { refetch } = trpc.foodReview.all.useQuery(
     { restaurantId },
@@ -58,7 +64,7 @@ export const AddReviewModal = ({
         await addFoodReview({
           name: trimmedName,
           restaurantId,
-          like: Like.LIKE,
+          like,
           review: note,
         });
       } catch {
@@ -68,9 +74,10 @@ export const AddReviewModal = ({
       await refetch();
       setName("");
       setNote("");
+      setLike(Like.LIKE);
       closeModal();
     },
-    [addFoodReview, closeModal, note, refetch, restaurantId, trimmedName],
+    [addFoodReview, closeModal, like, note, refetch, restaurantId, trimmedName],
   );
 
   return (
@@ -110,7 +117,7 @@ export const AddReviewModal = ({
                     as="h3"
                     className="text-lg font-medium leading-6 text-gray-900"
                   >
-                    Add Item
+                    Log a dish
                   </Dialog.Title>
                   <button
                     type="button"
@@ -157,13 +164,49 @@ export const AddReviewModal = ({
                     value={note}
                     onChange={handleNoteChange}
                   />
-                  <div className="flex justify-end">
+                  <div className="flex items-center justify-between">
+                    <div
+                      className="flex items-center gap-1"
+                      role="group"
+                      aria-label="Rating"
+                    >
+                      <button
+                        type="button"
+                        className="rounded-md p-1 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        aria-label="Dislike"
+                        aria-pressed={like === Like.DISLIKE}
+                        title="Dislike"
+                        onClick={() => setLike(Like.DISLIKE)}
+                      >
+                        <HandThumbDownIcon
+                          className={classNames(
+                            "h-6 w-6 stroke-slate-600",
+                            like === Like.DISLIKE && "fill-red-500",
+                          )}
+                        />
+                      </button>
+                      <button
+                        type="button"
+                        className="rounded-md p-1 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        aria-label="Like"
+                        aria-pressed={like === Like.LIKE}
+                        title="Like"
+                        onClick={() => setLike(Like.LIKE)}
+                      >
+                        <HandThumbUpIcon
+                          className={classNames(
+                            "h-6 w-6 stroke-slate-600",
+                            like === Like.LIKE && "fill-green-500",
+                          )}
+                        />
+                      </button>
+                    </div>
                     <Button
                       type="submit"
                       isLoading={isAddingFoodReview}
                       disabled={trimmedName.length === 0}
                     >
-                      Add
+                      Save
                     </Button>
                   </div>
                 </form>
