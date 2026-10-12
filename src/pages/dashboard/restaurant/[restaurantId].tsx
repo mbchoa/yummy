@@ -11,6 +11,7 @@ import { AddReviewModal } from "../../../components/addReviewModal";
 import { Button } from "../../../components/button";
 import { Layout } from "../../../components/layout";
 import { FavoriteFoods } from "../../../components/modules/restaurantDetail/favoriteFoods";
+import { RemoveFromList } from "../../../components/modules/restaurantDetail/removeFromList";
 import { YelpReviews } from "../../../components/modules/restaurantDetail/yelpReviews";
 import { retryServerErrors } from "../../../utils/retryServerErrors";
 import { trpc } from "../../../utils/trpc";
@@ -62,6 +63,12 @@ export default function RestaurantById() {
       retry: false,
     },
   );
+  // shares its cache with the dish list, so the count stays current as dishes
+  // are logged or removed
+  const { data: foodReviews } = trpc.foodReview.all.useQuery(
+    { restaurantId },
+    { enabled: savedRestaurant !== undefined && savedRestaurant !== null },
+  );
 
   // data mutation
   const { mutateAsync: addRestaurant } =
@@ -70,9 +77,8 @@ export default function RestaurantById() {
     trpc.favoriteRestaurant.update.useMutation();
   const { mutateAsync: removeRestaurant, isLoading: isRemovingRestaurant } =
     trpc.favoriteRestaurant.remove.useMutation();
-  const [isConfirmingRemove, setIsConfirmingRemove] = useState(false);
 
-  const handleRemoveMissingRestaurant = useCallback(async () => {
+  const handleRemoveRestaurant = useCallback(async () => {
     await removeRestaurant({ id: restaurantId });
     await router.push("/dashboard");
   }, [removeRestaurant, restaurantId, router]);
@@ -95,12 +101,9 @@ export default function RestaurantById() {
       return;
     }
 
+    // already disliked; removing it (and its dishes) is a separate, confirmed
+    // action
     if (like === Like.DISLIKE) {
-      await removeRestaurant({
-        id: restaurantId,
-      });
-      await refetch();
-      setLike(Like.UNSELECTED);
       return;
     }
 
@@ -109,14 +112,7 @@ export default function RestaurantById() {
       like: Like.DISLIKE,
     });
     setLike(Like.DISLIKE);
-  }, [
-    addRestaurant,
-    like,
-    refetch,
-    removeRestaurant,
-    restaurantId,
-    updateRestaurant,
-  ]);
+  }, [addRestaurant, like, refetch, restaurantId, updateRestaurant]);
 
   const handleFavoriteClick = useCallback(async () => {
     if (like === Like.UNSELECTED) {
@@ -129,12 +125,9 @@ export default function RestaurantById() {
       return;
     }
 
+    // already liked; removing it (and its dishes) is a separate, confirmed
+    // action
     if (like === Like.LIKE) {
-      await removeRestaurant({
-        id: restaurantId,
-      });
-      await refetch();
-      setLike(Like.UNSELECTED);
       return;
     }
 
@@ -143,14 +136,7 @@ export default function RestaurantById() {
       like: Like.LIKE,
     });
     setLike(Like.LIKE);
-  }, [
-    addRestaurant,
-    like,
-    refetch,
-    removeRestaurant,
-    restaurantId,
-    updateRestaurant,
-  ]);
+  }, [addRestaurant, like, refetch, restaurantId, updateRestaurant]);
 
   const isLoading = isLoadingYelpRestaurant || isLoadingSavedRestaurant;
 
@@ -170,44 +156,17 @@ export default function RestaurantById() {
           </p>
           {yelpRestaurantError.data?.code === "NOT_FOUND" &&
             savedRestaurant && (
-              <div className="space-y-3 rounded border border-gray-300 p-4">
-                {isConfirmingRemove ? (
-                  <>
-                    <p className="text-sm text-gray-700">
-                      Remove it from your list, along with any dishes you logged
-                      there? This can&apos;t be undone.
-                    </p>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        isLoading={isRemovingRestaurant}
-                        onClick={handleRemoveMissingRestaurant}
-                      >
-                        Remove
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setIsConfirmingRemove(false)}
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  </>
-                ) : (
-                  <>
+              <div className="rounded border border-gray-300 p-4">
+                <RemoveFromList
+                  dishCount={foodReviews?.length}
+                  isRemoving={isRemovingRestaurant}
+                  onRemove={handleRemoveRestaurant}
+                  prompt={
                     <p className="text-sm text-gray-700">
                       It&apos;s still saved in your list.
                     </p>
-                    <Button
-                      size="sm"
-                      variant="outlined"
-                      onClick={() => setIsConfirmingRemove(true)}
-                    >
-                      Remove from my list
-                    </Button>
-                  </>
-                )}
+                  }
+                />
               </div>
             )}
           <Link className="text-indigo-600 hover:underline" href="/dashboard">
@@ -260,9 +219,7 @@ export default function RestaurantById() {
                 onClick={handleDislikeClick}
                 ariaLabel="Dislike restaurant"
                 ariaPressed={like === Like.DISLIKE}
-                title={
-                  like === Like.DISLIKE ? "Remove from dislikes" : "Dislike"
-                }
+                title={like === Like.DISLIKE ? "In your dislikes" : "Dislike"}
                 LeftIcon={
                   <HandThumbDownIcon
                     className={classNames(
@@ -284,7 +241,7 @@ export default function RestaurantById() {
                 onClick={handleFavoriteClick}
                 ariaLabel="Like restaurant"
                 ariaPressed={like === Like.LIKE}
-                title={like === Like.LIKE ? "Remove from favorites" : "Like"}
+                title={like === Like.LIKE ? "In your favorites" : "Like"}
                 LeftIcon={
                   <HandThumbUpIcon
                     className={classNames(
@@ -302,7 +259,21 @@ export default function RestaurantById() {
           </div>
           <hr className="my-6" />
           {like !== Like.UNSELECTED ? (
-            <FavoriteFoods openModal={openModal} restaurantId={restaurantId} />
+            <>
+              <FavoriteFoods
+                openModal={openModal}
+                restaurantId={restaurantId}
+              />
+              {savedRestaurant && (
+                <div className="mt-6">
+                  <RemoveFromList
+                    dishCount={foodReviews?.length}
+                    isRemoving={isRemovingRestaurant}
+                    onRemove={handleRemoveRestaurant}
+                  />
+                </div>
+              )}
+            </>
           ) : (
             !isLoading && (
               <section className="space-y-4">
@@ -327,9 +298,9 @@ export default function RestaurantById() {
   }, [
     yelpRestaurantError,
     savedRestaurant,
-    isConfirmingRemove,
+    foodReviews,
     isRemovingRestaurant,
-    handleRemoveMissingRestaurant,
+    handleRemoveRestaurant,
     isLoadingYelpRestaurant,
     restaurant,
     handleDislikeClick,
