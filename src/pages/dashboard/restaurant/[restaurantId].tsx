@@ -4,6 +4,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { Like } from "@prisma/client";
 import classNames from "classnames";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useCallback, useEffect, useState } from "react";
@@ -12,6 +13,10 @@ import { Button } from "../../../components/button";
 import { Layout } from "../../../components/layout";
 import { FavoriteFoods } from "../../../components/modules/restaurantDetail/favoriteFoods";
 import { RemoveFromList } from "../../../components/modules/restaurantDetail/removeFromList";
+import {
+  RestaurantInfo,
+  RestaurantInfoSkeleton,
+} from "../../../components/modules/restaurantDetail/restaurantInfo";
 import { YelpReviews } from "../../../components/modules/restaurantDetail/yelpReviews";
 import { requireAuth } from "../../../server/common/require-auth";
 import { retryServerErrors } from "../../../utils/retryServerErrors";
@@ -189,31 +194,37 @@ function RestaurantDetail() {
     return (
       <>
         <div className="p-4">
-          <div className="grid grid-cols-4 grid-rows-2 gap-2">
-            <header className="col-span-full row-start-1 space-y-4">
+          {isLoadingYelpRestaurant || restaurant === undefined ? (
+            <div className="mb-4 h-48 animate-pulse rounded-xl bg-gray-200 sm:h-64" />
+          ) : (
+            restaurant.imageUrl && (
+              <div className="relative mb-4 h-48 overflow-hidden rounded-xl bg-gray-200 sm:h-64">
+                <Image
+                  src={restaurant.imageUrl}
+                  alt=""
+                  fill
+                  priority
+                  sizes="(min-width: 1024px) 1024px, 100vw"
+                  className="object-cover"
+                />
+              </div>
+            )
+          )}
+          <div className="flex items-start justify-between gap-4">
+            <header className="min-w-0 flex-1 space-y-2">
               {isLoadingYelpRestaurant || restaurant === undefined ? (
-                <div className="h-8 w-48 animate-pulse rounded bg-gray-300" />
-              ) : (
-                <h1 className="text-2xl font-medium">{restaurant.name}</h1>
-              )}
-            </header>
-            <address className="col-span-2 row-start-2 not-italic">
-              {isLoadingYelpRestaurant || restaurant === undefined ? (
-                <div className="space-y-1">
-                  <div className="h-6 w-32 animate-pulse rounded bg-gray-300" />
-                  <div className="h-6 w-36 animate-pulse rounded bg-gray-300" />
-                </div>
+                <>
+                  <div className="h-8 w-48 animate-pulse rounded bg-gray-300" />
+                  <RestaurantInfoSkeleton />
+                </>
               ) : (
                 <>
-                  <p>{restaurant.location.address1}</p>
-                  <p>
-                    {restaurant.location.city}, {restaurant.location.state}{" "}
-                    {restaurant.location.zipCode}
-                  </p>
+                  <h1 className="text-2xl font-medium">{restaurant.name}</h1>
+                  <RestaurantInfo restaurant={restaurant} />
                 </>
               )}
-            </address>
-            <div className="col-span-2 col-start-3 row-start-2 flex h-full w-full items-center justify-end gap-1">
+            </header>
+            <div className="flex shrink-0 items-center gap-1">
               {!isLoading && (
                 <span className="mr-1 hidden text-sm text-gray-500 sm:inline">
                   {like === Like.LIKE && "In your favorites"}

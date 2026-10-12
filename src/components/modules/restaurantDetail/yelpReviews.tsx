@@ -2,6 +2,7 @@ import { UserIcon } from "@heroicons/react/24/outline";
 import { StarIcon } from "@heroicons/react/24/solid";
 import classNames from "classnames";
 import Image from "next/image";
+import { useState } from "react";
 import { retryServerErrors } from "../../../utils/retryServerErrors";
 import { trpc } from "../../../utils/trpc";
 
@@ -19,6 +20,9 @@ const formatReviewDate = (timeCreated: string) =>
   });
 
 export const YelpReviews = ({ restaurantId, yelpUrl }: IYelpReviewsProps) => {
+  // collapsed by default: your own notes come first, and reviews are only
+  // fetched from Yelp when asked for
+  const [isExpanded, setIsExpanded] = useState(false);
   const {
     data: yelpReviews,
     isLoading,
@@ -26,7 +30,7 @@ export const YelpReviews = ({ restaurantId, yelpUrl }: IYelpReviewsProps) => {
   } = trpc.yelp.reviews.useQuery(
     { id: restaurantId },
     {
-      enabled: restaurantId !== undefined,
+      enabled: isExpanded && restaurantId !== undefined,
       refetchOnWindowFocus: false,
       retry: retryServerErrors,
       trpc: {
@@ -144,7 +148,17 @@ export const YelpReviews = ({ restaurantId, yelpUrl }: IYelpReviewsProps) => {
           </a>
         )}
       </header>
-      <ul className="space-y-6">{renderReviews()}</ul>
+      {isExpanded ? (
+        <ul className="space-y-6">{renderReviews()}</ul>
+      ) : (
+        <button
+          type="button"
+          className="text-sm text-indigo-600 hover:underline"
+          onClick={() => setIsExpanded(true)}
+        >
+          Show recent reviews
+        </button>
+      )}
     </section>
   );
 };
