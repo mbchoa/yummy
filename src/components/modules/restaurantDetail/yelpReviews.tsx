@@ -105,7 +105,7 @@ export const YelpReviews = ({ restaurantId, yelpUrl }: IYelpReviewsProps) => {
                   key={star}
                   className={classNames(
                     "h-4 w-4",
-                    star <= review.rating ? "text-red-600" : "text-gray-300",
+                    star <= review.rating ? "text-yellow-500" : "text-gray-300",
                   )}
                   aria-hidden
                 />

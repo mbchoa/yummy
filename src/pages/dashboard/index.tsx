@@ -7,6 +7,7 @@ import { Layout } from "../../components/layout";
 import { ListDropDown } from "../../components/modules/dashboard/listDropdown";
 import { RestaurantsList } from "../../components/modules/dashboard/restaurantsList";
 import type { IYelpBusinessSchema } from "../../models/YelpSchemas";
+import { requireAuth } from "../../server/common/require-auth";
 import { trpc } from "../../utils/trpc";
 
 export default function Dashboard() {
@@ -231,3 +232,5 @@ const groupRestaurantsByCity = (
 
   return restaurantsGroupedByCity;
 };
+
+export const getServerSideProps = requireAuth;
