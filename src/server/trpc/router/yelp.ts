@@ -9,14 +9,14 @@ import {
   type IYelpBusinessReviewsResponseSchema,
   type IYelpBusinessSearchResponseSchema,
 } from "../../../models/YelpSchemas";
-import { publicProcedure, router } from "../trpc";
+import { protectedProcedure, router } from "../trpc";
 import { getYelpRestaurantById } from "./helpers/getYelpRestaurantById";
 import { rethrowYelpError } from "./helpers/rethrowYelpError";
 
 const redis = new Redis(env.RAILWAY_REDIS_URL);
 
 export const yelp = router({
-  search: publicProcedure
+  search: protectedProcedure
     .input(
       z.object({
         location: z.string(),
@@ -63,12 +63,12 @@ export const yelp = router({
         throw error;
       }
     }),
-  byId: publicProcedure
+  byId: protectedProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ input }) => {
       return getYelpRestaurantById(input.id, redis);
     }),
-  byIds: publicProcedure
+  byIds: protectedProcedure
     .input(z.array(z.string()))
     .query(async ({ input: restaurantIds }) => {
       const results = await Promise.allSettled(
@@ -89,7 +89,7 @@ export const yelp = router({
         throw result.reason;
       });
     }),
-  reviews: publicProcedure
+  reviews: protectedProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ input }) => {
       const cacheKey = `yelpBusinessReviews:${input.id}`;
