@@ -4,6 +4,7 @@ import {
   ChevronDownIcon,
   UserIcon,
   UserPlusIcon,
+  UsersIcon,
 } from "@heroicons/react/24/outline";
 import classNames from "classnames";
 import { partial } from "lodash-es";
@@ -12,6 +13,7 @@ import Image from "next/image";
 import { Fragment, useCallback, useState } from "react";
 import { trpc } from "../../../utils/trpc";
 import { AddCollaboratorModal } from "../../addCollaboratorModal";
+import { ManageSharingModal } from "../../manageSharingModal";
 
 interface IListDropDownProps {
   onSwitchUser: () => Promise<void>;
@@ -26,6 +28,8 @@ export const ListDropDown = ({ onSwitchUser }: IListDropDownProps) => {
   const openModal = useCallback(() => {
     setIsAddCollaboratorModalOpen(true);
   }, []);
+  const [isManageSharingModalOpen, setIsManageSharingModalOpen] =
+    useState(false);
   const { data: session } = useSession();
   const { data: userSetting, refetch: refetchUserSetting } =
     trpc.userSetting.get.useQuery();
@@ -45,6 +49,12 @@ export const ListDropDown = ({ onSwitchUser }: IListDropDownProps) => {
     },
     [switchUser, onSwitchUser, refetchUserSetting],
   );
+
+  // leaving the list you're viewing switches you back to your own
+  const handleLeaveList = useCallback(async () => {
+    await refetchUserSetting();
+    await onSwitchUser();
+  }, [onSwitchUser, refetchUserSetting]);
 
   return (
     <>
@@ -162,6 +172,20 @@ export const ListDropDown = ({ onSwitchUser }: IListDropDownProps) => {
                   </button>
                 )}
               </Menu.Item>
+              <Menu.Item>
+                {({ active }) => (
+                  <button
+                    className={classNames(
+                      "flex w-full px-4 py-2 text-sm text-gray-700",
+                      active && "bg-gray-100",
+                    )}
+                    onClick={() => setIsManageSharingModalOpen(true)}
+                  >
+                    <UsersIcon className="mr-2 h-5 w-5" aria-hidden="true" />
+                    Manage sharing
+                  </button>
+                )}
+              </Menu.Item>
             </div>
           </Menu.Items>
         </Transition>
@@ -169,6 +193,11 @@ export const ListDropDown = ({ onSwitchUser }: IListDropDownProps) => {
       <AddCollaboratorModal
         isOpen={isAddCollaboratorModalOpen}
         closeModal={closeModal}
+      />
+      <ManageSharingModal
+        isOpen={isManageSharingModalOpen}
+        closeModal={() => setIsManageSharingModalOpen(false)}
+        onLeaveList={handleLeaveList}
       />
     </>
   );

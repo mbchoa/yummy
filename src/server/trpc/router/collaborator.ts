@@ -1,3 +1,4 @@
+import type { PrismaClient } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { protectedProcedure, router } from "../trpc";
@@ -52,18 +53,69 @@ export const collaborator = router({
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      const { count } = await ctx.prisma.collaborator.deleteMany({
+      const collaborator = await ctx.prisma.collaborator.findFirst({
         where: {
           id: input.id,
           ownerId: ctx.session.user.id,
         },
       });
 
-      if (count === 0) {
+      if (collaborator === null) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Collaborator not found",
         });
       }
+
+      await revokeAccess(
+        ctx.prisma,
+        collaborator.collaboratorId,
+        collaborator.ownerId,
+      );
+    }),
+  // stop collaborating on a list someone else shared with you
+  leave: protectedProcedure
+    .input(
+      z.object({
+        ownerId: z.string(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const collaborator = await ctx.prisma.collaborator.findUnique({
+        where: {
+          collaboratorId_ownerId: {
+            collaboratorId: ctx.session.user.id,
+            ownerId: input.ownerId,
+          },
+        },
+      });
+
+      if (collaborator === null) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Shared list not found",
+        });
+      }
+
+      await revokeAccess(ctx.prisma, ctx.session.user.id, input.ownerId);
     }),
 });
+
+// removes the collaborator's access, and if they were viewing that list,
+// switches them back to their own so they don't land on a list they can't load
+const revokeAccess = (
+  prisma: PrismaClient,
+  collaboratorId: string,
+  ownerId: string,
+) =>
+  prisma.$transaction([
+    prisma.collaborator.delete({
+      where: {
+        collaboratorId_ownerId: { collaboratorId, ownerId },
+      },
+    }),
+    prisma.userSetting.updateMany({
+      where: { userId: collaboratorId, selectedUserId: ownerId },
+      data: { selectedUserId: collaboratorId },
+    }),
+  ]);
