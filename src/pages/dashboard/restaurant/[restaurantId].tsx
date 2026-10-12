@@ -13,6 +13,7 @@ import { Layout } from "../../../components/layout";
 import { FavoriteFoods } from "../../../components/modules/restaurantDetail/favoriteFoods";
 import { RemoveFromList } from "../../../components/modules/restaurantDetail/removeFromList";
 import { YelpReviews } from "../../../components/modules/restaurantDetail/yelpReviews";
+import { requireAuth } from "../../../server/common/require-auth";
 import { retryServerErrors } from "../../../utils/retryServerErrors";
 import { trpc } from "../../../utils/trpc";
 
@@ -325,3 +326,5 @@ function RestaurantDetail() {
 
   return <Layout>{maybeRenderBody()}</Layout>;
 }
+
+export const getServerSideProps = requireAuth;

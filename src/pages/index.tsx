@@ -3,10 +3,11 @@ import {
   ClipboardDocumentListIcon,
   UsersIcon,
 } from "@heroicons/react/24/outline";
-import { type NextPage } from "next";
+import { type GetServerSideProps, type NextPage } from "next";
 import { signIn, useSession } from "next-auth/react";
 import Head from "next/head";
 import { useRouter } from "next/router";
+import { getServerAuthSession } from "../server/common/get-server-auth-session";
 
 const features = [
   {
@@ -29,18 +30,18 @@ const features = [
   },
 ];
 
+// signed-in users go straight to the dashboard, before the landing page renders
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
+  const session = await getServerAuthSession(ctx);
+  if (session?.user) {
+    return { redirect: { destination: "/dashboard", permanent: false } };
+  }
+  return { props: {} };
+};
+
 const Home: NextPage = () => {
   const router = useRouter();
-  const { data: session, status } = useSession();
-
-  if (
-    status === "authenticated" &&
-    session !== null &&
-    session.user !== null &&
-    router.isReady === true
-  ) {
-    router.push("/dashboard");
-  }
+  const { data: session } = useSession();
 
   return (
     <>
