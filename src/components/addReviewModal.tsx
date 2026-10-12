@@ -23,14 +23,19 @@ export const AddReviewModal = ({
     { restaurantId },
     { enabled: !!restaurantId },
   );
-  const { mutateAsync: addFoodReview, isLoading: isAddingFoodReview } =
-    trpc.foodReview.add.useMutation();
+  const {
+    mutateAsync: addFoodReview,
+    isLoading: isAddingFoodReview,
+    error: addFoodReviewError,
+    reset: resetAddFoodReview,
+  } = trpc.foodReview.add.useMutation();
   const trimmedName = name.trim();
   const handleChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       setName(event.target.value);
+      resetAddFoodReview();
     },
-    [],
+    [resetAddFoodReview],
   );
 
   const handleNoteChange = useCallback(
@@ -46,12 +51,17 @@ export const AddReviewModal = ({
       if (trimmedName.length === 0) {
         return;
       }
-      await addFoodReview({
-        name: trimmedName,
-        restaurantId,
-        like: Like.LIKE,
-        review: note,
-      });
+      try {
+        await addFoodReview({
+          name: trimmedName,
+          restaurantId,
+          like: Like.LIKE,
+          review: note,
+        });
+      } catch {
+        // shown below the dish name
+        return;
+      }
       await refetch();
       setName("");
       setNote("");
@@ -118,7 +128,22 @@ export const AddReviewModal = ({
                     placeholder="Double Double Cheeseburger"
                     value={name}
                     onChange={handleChange}
+                    aria-invalid={addFoodReviewError !== null}
+                    aria-describedby={
+                      addFoodReviewError !== null ? "add-dish-error" : undefined
+                    }
                   />
+                  {addFoodReviewError !== null && (
+                    <p
+                      id="add-dish-error"
+                      role="alert"
+                      className="text-sm text-red-600"
+                    >
+                      {addFoodReviewError.data?.code === "CONFLICT"
+                        ? addFoodReviewError.message
+                        : "Couldn't add this dish. Try again."}
+                    </p>
+                  )}
                   <textarea
                     className="w-full rounded text-sm"
                     name="note"
