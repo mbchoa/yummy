@@ -5,17 +5,6 @@ import { protectedProcedure, router } from "../trpc";
 type UserSearchResult = Pick<User, "id" | "name" | "email" | "image">;
 
 export const user = router({
-  all: protectedProcedure.query(({ ctx }) => {
-    return ctx.prisma.user.findMany({
-      where: {
-        NOT: {
-          id: {
-            equals: ctx.session.user.id,
-          },
-        },
-      },
-    });
-  }),
   search: protectedProcedure
     .input(
       z.object({

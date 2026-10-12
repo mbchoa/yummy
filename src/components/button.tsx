@@ -1,10 +1,6 @@
 import classNames from "classnames";
 import React from "react";
 
-interface ILinkRenderer {
-  (children: React.ReactNode, cx: string): React.ReactNode;
-}
-
 interface IButtonProps {
   isLoading?: boolean;
   size?: "sm" | "md" | "lg";
@@ -18,7 +14,6 @@ interface IButtonProps {
   ariaLabel?: string;
   ariaPressed?: boolean;
   title?: string;
-  linkRenderer?: ILinkRenderer;
   type?: "button" | "submit";
 }
 
@@ -35,7 +30,6 @@ export const Button = ({
   ariaLabel,
   ariaPressed,
   title,
-  linkRenderer,
   type,
 }: IButtonProps) => {
   const cx = classNames(
@@ -97,24 +91,18 @@ export const Button = ({
     );
   }
   return (
-    <>
-      {linkRenderer !== undefined ? (
-        linkRenderer(children, cx)
-      ) : (
-        <button
-          className={cx}
-          disabled={disabled}
-          onClick={onClick}
-          type={type}
-          aria-label={ariaLabel}
-          aria-pressed={ariaPressed}
-          title={title}
-        >
-          {LeftIcon}
-          {children}
-          {RightIcon}
-        </button>
-      )}
-    </>
+    <button
+      className={cx}
+      disabled={disabled}
+      onClick={onClick}
+      type={type}
+      aria-label={ariaLabel}
+      aria-pressed={ariaPressed}
+      title={title}
+    >
+      {LeftIcon}
+      {children}
+      {RightIcon}
+    </button>
   );
 };
