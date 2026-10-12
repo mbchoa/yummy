@@ -82,7 +82,7 @@ export const foodReview = router({
           .enum(["LIKE", "DISLIKE", "UNSELECTED"])
           .optional()
           .default("UNSELECTED"),
-        name: z.string(),
+        name: z.string().trim().min(1),
         review: noteSchema.optional(),
       }),
     )
@@ -98,6 +98,12 @@ export const foodReview = router({
 
       // check if selected user is the same as the user
       if (selectedUserId === ctx.session.user.id) {
+        await assertDishNotLogged(
+          ctx.prisma,
+          input.name,
+          input.restaurantId,
+          ctx.session.user.id,
+        );
         return ctx.prisma.restaurantItemReview.create({
           data: {
             like: input.like,
@@ -151,6 +157,12 @@ export const foodReview = router({
         });
       }
 
+      await assertDishNotLogged(
+        ctx.prisma,
+        input.name,
+        input.restaurantId,
+        selectedUserId,
+      );
       return ctx.prisma.restaurantItemReview.create({
         data: {
           like: input.like,
@@ -216,6 +228,31 @@ export const foodReview = router({
       });
     }),
 });
+
+// each dish is listed once per restaurant; adding a second review for it would
+// show up as a duplicate entry
+const assertDishNotLogged = async (
+  prisma: PrismaClient,
+  name: string,
+  restaurantId: string,
+  ownerId: string,
+) => {
+  const loggedDish = await prisma.restaurantItem.findFirst({
+    where: {
+      name: { equals: name, mode: "insensitive" },
+      restaurantId,
+      userId: ownerId,
+      restaurantItemReview: { some: {} },
+    },
+  });
+
+  if (loggedDish !== null) {
+    throw new TRPCError({
+      code: "CONFLICT",
+      message: `You've already logged ${loggedDish.name} here.`,
+    });
+  }
+};
 
 // a food review can be edited by the owner of the list it belongs to, or by
 // one of that owner's collaborators

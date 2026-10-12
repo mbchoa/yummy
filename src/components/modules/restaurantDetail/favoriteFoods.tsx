@@ -150,7 +150,7 @@ export const FavoriteFoods = ({
       <ul className="space-y-2">
         {foodReviews.map((foodReview) => (
           <li
-            key={foodReview.restaurantItemId}
+            key={foodReview.id}
             className="flex items-start justify-between gap-4"
           >
             <div className="min-w-0 flex-1">
