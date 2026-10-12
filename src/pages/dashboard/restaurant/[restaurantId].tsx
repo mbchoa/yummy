@@ -71,10 +71,12 @@ export default function RestaurantById() {
   );
 
   // data mutation
-  const { mutateAsync: addRestaurant } =
+  const { mutateAsync: addRestaurant, isLoading: isAddingRestaurant } =
     trpc.favoriteRestaurant.add.useMutation();
-  const { mutateAsync: updateRestaurant } =
+  const { mutateAsync: updateRestaurant, isLoading: isUpdatingRestaurant } =
     trpc.favoriteRestaurant.update.useMutation();
+  // one rating change at a time, so a double-click can't send two requests
+  const isSavingLike = isAddingRestaurant || isUpdatingRestaurant;
   const { mutateAsync: removeRestaurant, isLoading: isRemovingRestaurant } =
     trpc.favoriteRestaurant.remove.useMutation();
 
@@ -215,7 +217,7 @@ export default function RestaurantById() {
                 size="sm"
                 color="primary"
                 variant="ghost"
-                disabled={isLoadingYelpRestaurant}
+                disabled={isLoadingYelpRestaurant || isSavingLike}
                 onClick={handleDislikeClick}
                 ariaLabel="Dislike restaurant"
                 ariaPressed={like === Like.DISLIKE}
@@ -237,7 +239,7 @@ export default function RestaurantById() {
                 size="sm"
                 color="primary"
                 variant="ghost"
-                disabled={isLoadingYelpRestaurant}
+                disabled={isLoadingYelpRestaurant || isSavingLike}
                 onClick={handleFavoriteClick}
                 ariaLabel="Like restaurant"
                 ariaPressed={like === Like.LIKE}
@@ -305,6 +307,7 @@ export default function RestaurantById() {
     restaurant,
     handleDislikeClick,
     isLoading,
+    isSavingLike,
     like,
     handleFavoriteClick,
     openModal,

@@ -1,8 +1,10 @@
+import { MutationCache, QueryClient } from "@tanstack/react-query";
 import { httpBatchLink, httpLink, loggerLink, splitLink } from "@trpc/client";
 import { createTRPCNext } from "@trpc/next";
 import { type inferRouterInputs, type inferRouterOutputs } from "@trpc/server";
 import superjson from "superjson";
 
+import { showErrorToast } from "../components/toast";
 import { type AppRouter } from "../server/trpc/router/_app";
 
 const getBaseUrl = () => {
@@ -13,6 +15,26 @@ const getBaseUrl = () => {
 
 export const trpc = createTRPCNext<AppRouter>({
   config() {
+    const queryClient: QueryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          refetchOnWindowFocus: false,
+        },
+      },
+      mutationCache: new MutationCache({
+        // every failed mutation is reported to the user, and data is reloaded
+        // so the page shows what the server actually saved. A mutation whose
+        // error is already shown in place can opt out of the toast with
+        // `meta: { skipErrorToast: true }`.
+        onError: (_error, _variables, _context, mutation) => {
+          if (mutation.meta?.skipErrorToast !== true) {
+            showErrorToast("Couldn't save that change. Try again.");
+          }
+          void queryClient.invalidateQueries();
+        },
+      }),
+    });
+
     return {
       transformer: superjson,
       links: [
@@ -36,13 +58,7 @@ export const trpc = createTRPCNext<AppRouter>({
           }),
         }),
       ],
-      queryClientConfig: {
-        defaultOptions: {
-          queries: {
-            refetchOnWindowFocus: false,
-          },
-        },
-      },
+      queryClient,
     };
   },
   ssr: false,
