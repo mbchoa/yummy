@@ -23,11 +23,12 @@ export const getYelpRestaurantById = async (id: string, redis: Redis) => {
     .json<IYelpBusinessSchema>()
     .catch(rethrowYelpError);
   const formattedResponse = camelCaseKeys<IYelpBusinessSchema>(response);
+  // Yelp's API terms allow storing its content for at most 24 hours
   await redis.set(
     cacheKey,
     JSON.stringify(formattedResponse),
     "EX",
-    60 * 60 * 24 * 30,
-  ); // cache restaurant info for 30 days
+    60 * 60 * 24,
+  );
   return formattedResponse;
 };
