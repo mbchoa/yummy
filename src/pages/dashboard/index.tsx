@@ -1,7 +1,6 @@
 import { Tab } from "@headlessui/react";
 import { Like } from "@prisma/client";
 import classNames from "classnames";
-import dynamic from "next/dynamic";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useCallback, useMemo, useState } from "react";
@@ -14,42 +13,23 @@ import { trpc } from "../../utils/trpc";
 
 const TABS = ["Favorites", "Dislikes"] as const;
 
-// leaflet needs the browser
-const RestaurantsMap = dynamic(
-  () => import("../../components/modules/dashboard/restaurantsMap"),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="h-[60vh] min-h-[320px] animate-pulse rounded-lg bg-gray-200" />
-    ),
-  },
-);
-
 export default function Dashboard() {
   const { data: session } = useSession();
   const router = useRouter<"/dashboard">();
   // the selected tab lives in the URL, so refresh and back keep it
   const selectedTabIndex = router.query.tab === "dislikes" ? 1 : 0;
-  const isMapView = router.query.view === "map";
-  const updateQuery = useCallback(
-    (tabIndex: number, isMap: boolean) => {
+  const handleTabChange = useCallback(
+    (index: number) => {
       router.replace(
         {
           pathname: "/dashboard",
-          query: {
-            ...(tabIndex === 1 ? { tab: "dislikes" } : {}),
-            ...(isMap ? { view: "map" } : {}),
-          },
+          query: index === 1 ? { tab: "dislikes" } : {},
         },
         undefined,
         { shallow: true },
       );
     },
     [router],
-  );
-  const handleTabChange = useCallback(
-    (index: number) => updateQuery(index, isMapView),
-    [isMapView, updateQuery],
   );
   const [filter, setFilter] = useState("");
   const normalizedFilter = filter.trim().toLowerCase();
@@ -226,30 +206,20 @@ export default function Dashboard() {
             "drop-shadow-md",
           )}
         >
-          {isMapView &&
-          restaurantsGroupedByCity !== undefined &&
-          Object.keys(restaurantsGroupedByCity).length > 0 ? (
-            <RestaurantsMap
-              restaurants={Object.values(restaurantsGroupedByCity).flat()}
-            />
-          ) : (
-            // the list also covers loading, errors and empty results
-            <RestaurantsList
-              isLoading={isLoading}
-              restaurants={restaurantsGroupedByCity}
-              missingRestaurantIds={missingRestaurantIds}
-              dishCountByRestaurantId={dishCountByRestaurantId}
-              likedDishNamesByRestaurantId={likedDishNamesByRestaurantId}
-              isFiltered={normalizedFilter.length > 0}
-            />
-          )}
+          <RestaurantsList
+            isLoading={isLoading}
+            restaurants={restaurantsGroupedByCity}
+            missingRestaurantIds={missingRestaurantIds}
+            dishCountByRestaurantId={dishCountByRestaurantId}
+            likedDishNamesByRestaurantId={likedDishNamesByRestaurantId}
+            isFiltered={normalizedFilter.length > 0}
+          />
         </Tab.Panel>
       ),
     );
   }, [
     data,
     dishCountByRestaurantId,
-    isMapView,
     likedDishNamesByRestaurantId,
     normalizedFilter,
   ]);
@@ -279,45 +249,16 @@ export default function Dashboard() {
             </Tab.List>
             <ListDropDown onSwitchUser={refetch} />
           </div>
-          <div className="mt-4 flex items-center gap-2">
-            <label className="min-w-0 flex-1">
-              <span className="sr-only">Filter your list</span>
-              <input
-                type="search"
-                className="w-full rounded border px-3 py-2 text-sm outline-indigo-500"
-                placeholder="Filter by name, city, cuisine or dish"
-                value={filter}
-                onChange={(event) => setFilter(event.target.value)}
-              />
-            </label>
-            <div
-              className="flex shrink-0 rounded border text-sm"
-              role="group"
-              aria-label="View"
-            >
-              {(["List", "Map"] as const).map((view) => {
-                const isSelected = (view === "Map") === isMapView;
-                return (
-                  <button
-                    key={view}
-                    type="button"
-                    aria-pressed={isSelected}
-                    className={classNames(
-                      "px-3 py-2 first:rounded-l last:rounded-r focus:outline-none focus:ring-2 focus:ring-indigo-500",
-                      isSelected
-                        ? "bg-indigo-600 text-white"
-                        : "bg-white text-gray-600 hover:bg-gray-100",
-                    )}
-                    onClick={() =>
-                      updateQuery(selectedTabIndex, view === "Map")
-                    }
-                  >
-                    {view}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          <label className="mt-4 block">
+            <span className="sr-only">Filter your list</span>
+            <input
+              type="search"
+              className="w-full rounded border px-3 py-2 text-sm outline-indigo-500"
+              placeholder="Filter by name, city, cuisine or dish"
+              value={filter}
+              onChange={(event) => setFilter(event.target.value)}
+            />
+          </label>
           <Tab.Panels className="mt-4">{maybeRenderPanels()}</Tab.Panels>
         </Tab.Group>
       </div>
