@@ -120,7 +120,7 @@ export const yelp = router({
         cacheKey,
         JSON.stringify(formattedResponse),
         "EX",
-        60 * 60 * 24 * 7, // cache reviews for 1 week
+        60 * 60 * 24, // Yelp's API terms allow at most 24 hours
       );
       return formattedResponse;
     }),
