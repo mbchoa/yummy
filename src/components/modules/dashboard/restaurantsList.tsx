@@ -1,8 +1,8 @@
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
-import { StarIcon } from "@heroicons/react/24/solid";
 import Image from "next/image";
 import Link from "next/link";
 import type { IYelpBusinessSchema } from "../../../models/YelpSchemas";
+import { YelpLogo } from "../../yelp";
 
 interface IRestaurantsListProps {
   isLoading: boolean;
@@ -118,18 +118,9 @@ export const RestaurantsList = ({
                         <div className="h-12 w-12 shrink-0 rounded bg-gray-200" />
                       )}
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-baseline justify-between gap-2">
-                          <span className="truncate font-medium text-indigo-600">
-                            {restaurant.name}
-                          </span>
-                          <span className="flex shrink-0 items-center gap-1 text-sm text-gray-600">
-                            <StarIcon
-                              className="h-4 w-4 text-yellow-500"
-                              aria-hidden
-                            />
-                            {restaurant.rating}
-                          </span>
-                        </div>
+                        <p className="truncate font-medium text-indigo-600">
+                          {restaurant.name}
+                        </p>
                         <p className="truncate text-sm text-gray-500">
                           {restaurant.location.address1} &middot; {dishCount}{" "}
                           {dishCount === 1 ? "dish" : "dishes"} logged
@@ -183,6 +174,12 @@ export const RestaurantsList = ({
             })}
           </ul>
         </section>
+      )}
+      {Object.keys(restaurants).length > 0 && (
+        <p className="flex items-center justify-end gap-1.5 text-xs text-gray-500">
+          Restaurant details from
+          <YelpLogo href="https://www.yelp.com" />
+        </p>
       )}
     </div>
   );

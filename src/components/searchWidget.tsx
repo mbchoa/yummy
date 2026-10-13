@@ -1,12 +1,12 @@
 import { Combobox } from "@headlessui/react";
 import { MapPinIcon } from "@heroicons/react/24/outline";
-import { StarIcon } from "@heroicons/react/24/solid";
 import classNames from "classnames";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import { useCallback, useEffect, useState } from "react";
 import { retryServerErrors } from "../utils/retryServerErrors";
 import { trpc, type RouterOutputs } from "../utils/trpc";
+import { YelpLogo, YelpStars } from "./yelp";
 
 type Business = RouterOutputs["yelp"]["search"]["businesses"][number];
 
@@ -121,10 +121,9 @@ export const SearchWidget = () => {
         <div className="min-w-0 flex-1">
           <div className="flex items-baseline justify-between gap-2">
             <span className="truncate font-medium">{business.name}</span>
-            <span className="flex shrink-0 items-center gap-1 text-xs text-gray-600">
-              <StarIcon className="h-3.5 w-3.5 text-yellow-500" aria-hidden />
-              {business.rating}
-              <span className="text-gray-400">({business.reviewCount})</span>
+            <span className="flex shrink-0 items-center gap-1 text-xs text-gray-500">
+              <YelpStars rating={business.rating} size="small" />
+              {business.reviewCount.toLocaleString()}
             </span>
           </div>
           <p className="truncate text-xs text-gray-500">
@@ -186,6 +185,10 @@ export const SearchWidget = () => {
           {searchTerm.length > 0 && location.length > 0 && (
             <Combobox.Options className="absolute left-0 right-0 top-full mt-1 max-h-[70vh] overflow-y-auto rounded-lg bg-white drop-shadow-xl focus:outline-none">
               {renderSearchResultsContent()}
+              <div className="flex items-center justify-end gap-1.5 border-t px-4 py-2 text-xs text-gray-500">
+                Results from
+                <YelpLogo href="https://www.yelp.com" />
+              </div>
             </Combobox.Options>
           )}
         </div>
