@@ -1,7 +1,7 @@
 import { Like, type Prisma } from "@prisma/client";
-import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { protectedProcedure, router } from "../trpc";
+import { getEditableListOwnerId, getListAccess } from "./helpers/listAccess";
 
 // what the dashboard rows show: how many dishes are logged and which ones are
 // liked. Removing a dish deletes its review but leaves the dish itself, so
@@ -29,46 +29,10 @@ export const favoriteRestaurant = router({
         .optional(),
     )
     .query(async ({ input, ctx }) => {
-      if (ctx.session.user.settings === null) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "User settings not found",
-        });
-      }
-
-      const { selectedUserId } = ctx.session.user.settings;
-      // check if selected user is the same as the user
-      if (selectedUserId === ctx.session.user.id) {
-        return ctx.prisma.favoriteRestaurant.findMany({
-          where: {
-            userId: ctx.session.user.id,
-            like: input?.like ?? undefined,
-          },
-          include: dashboardInclude,
-        });
-      }
-
-      // check if use has access to selected user in user settings
-      const collaborator = await ctx.prisma.collaborator.findUnique({
-        where: {
-          collaboratorId_ownerId: {
-            collaboratorId: ctx.session.user.id,
-            ownerId: selectedUserId,
-          },
-        },
-      });
-
-      if (collaborator === null) {
-        throw new TRPCError({
-          code: "UNAUTHORIZED",
-          message:
-            "User does not have access to selected user's favorites list",
-        });
-      }
-
+      const { ownerId } = await getListAccess(ctx.prisma, ctx.session.user);
       return ctx.prisma.favoriteRestaurant.findMany({
         where: {
-          userId: selectedUserId,
+          userId: ownerId,
           like: input?.like ?? undefined,
         },
         include: dashboardInclude,
@@ -82,65 +46,22 @@ export const favoriteRestaurant = router({
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      if (ctx.session.user.settings === null) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "User settings not found",
-        });
-      }
-
-      const { selectedUserId } = ctx.session.user.settings;
-
+      const ownerId = await getEditableListOwnerId(
+        ctx.prisma,
+        ctx.session.user,
+      );
       // upsert, so a repeated request (e.g. a double-click) sets the rating
       // instead of failing on the primary key
-      // check if selected user is the same as the user
-      if (selectedUserId === ctx.session.user.id) {
-        return ctx.prisma.favoriteRestaurant.upsert({
-          where: {
-            restaurantId_userId: {
-              restaurantId: input.id,
-              userId: ctx.session.user.id,
-            },
-          },
-          create: {
-            restaurantId: input.id,
-            userId: ctx.session.user.id,
-            like: input.like,
-          },
-          update: {
-            like: input.like,
-          },
-        });
-      }
-
-      // check if use has access to selected user in user settings
-      const collaborator = await ctx.prisma.collaborator.findUnique({
-        where: {
-          collaboratorId_ownerId: {
-            collaboratorId: ctx.session.user.id,
-            ownerId: selectedUserId,
-          },
-        },
-      });
-
-      if (collaborator === null) {
-        throw new TRPCError({
-          code: "UNAUTHORIZED",
-          message:
-            "User does not have access to selected user's favorites list",
-        });
-      }
-
       return ctx.prisma.favoriteRestaurant.upsert({
         where: {
           restaurantId_userId: {
             restaurantId: input.id,
-            userId: selectedUserId,
+            userId: ownerId,
           },
         },
         create: {
           restaurantId: input.id,
-          userId: selectedUserId,
+          userId: ownerId,
           like: input.like,
         },
         update: {
@@ -151,48 +72,15 @@ export const favoriteRestaurant = router({
   remove: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ input, ctx }) => {
-      if (ctx.session.user.settings === null) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "User settings not found",
-        });
-      }
-
-      const { selectedUserId } = ctx.session.user.settings;
-      if (selectedUserId === ctx.session.user.id) {
-        return ctx.prisma.favoriteRestaurant.delete({
-          where: {
-            restaurantId_userId: {
-              restaurantId: input.id,
-              userId: ctx.session.user.id,
-            },
-          },
-        });
-      }
-
-      // check if use has access to selected user in user settings
-      const collaborator = await ctx.prisma.collaborator.findUnique({
-        where: {
-          collaboratorId_ownerId: {
-            collaboratorId: ctx.session.user.id,
-            ownerId: selectedUserId,
-          },
-        },
-      });
-
-      if (collaborator === null) {
-        throw new TRPCError({
-          code: "UNAUTHORIZED",
-          message:
-            "User does not have access to selected user's favorites list",
-        });
-      }
-
+      const ownerId = await getEditableListOwnerId(
+        ctx.prisma,
+        ctx.session.user,
+      );
       return ctx.prisma.favoriteRestaurant.delete({
         where: {
           restaurantId_userId: {
             restaurantId: input.id,
-            userId: selectedUserId,
+            userId: ownerId,
           },
         },
       });
@@ -200,48 +88,12 @@ export const favoriteRestaurant = router({
   byId: protectedProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ input, ctx }) => {
-      if (ctx.session.user.settings === null) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "User settings not found",
-        });
-      }
-
-      const { selectedUserId } = ctx.session.user.settings;
-      if (selectedUserId === ctx.session.user.id) {
-        return ctx.prisma.favoriteRestaurant.findUnique({
-          where: {
-            restaurantId_userId: {
-              restaurantId: input.id,
-              userId: ctx.session.user.id,
-            },
-          },
-        });
-      }
-
-      // check if use has access to selected user in user settings
-      const collaborator = await ctx.prisma.collaborator.findUnique({
-        where: {
-          collaboratorId_ownerId: {
-            collaboratorId: ctx.session.user.id,
-            ownerId: selectedUserId,
-          },
-        },
-      });
-
-      if (collaborator === null) {
-        throw new TRPCError({
-          code: "UNAUTHORIZED",
-          message:
-            "User does not have access to selected user's favorites list",
-        });
-      }
-
+      const { ownerId } = await getListAccess(ctx.prisma, ctx.session.user);
       return ctx.prisma.favoriteRestaurant.findUnique({
         where: {
           restaurantId_userId: {
             restaurantId: input.id,
-            userId: selectedUserId,
+            userId: ownerId,
           },
         },
       });
@@ -254,51 +106,15 @@ export const favoriteRestaurant = router({
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      if (ctx.session.user.settings === null) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "User settings not found",
-        });
-      }
-
-      const { selectedUserId } = ctx.session.user.settings;
-      if (selectedUserId === ctx.session.user.id) {
-        return ctx.prisma.favoriteRestaurant.update({
-          where: {
-            restaurantId_userId: {
-              restaurantId: input.id,
-              userId: ctx.session.user.id,
-            },
-          },
-          data: {
-            like: input.like,
-          },
-        });
-      }
-
-      // check if use has access to selected user in user settings
-      const collaborator = await ctx.prisma.collaborator.findUnique({
-        where: {
-          collaboratorId_ownerId: {
-            collaboratorId: ctx.session.user.id,
-            ownerId: selectedUserId,
-          },
-        },
-      });
-
-      if (collaborator === null) {
-        throw new TRPCError({
-          code: "UNAUTHORIZED",
-          message:
-            "User does not have access to selected user's favorites list",
-        });
-      }
-
+      const ownerId = await getEditableListOwnerId(
+        ctx.prisma,
+        ctx.session.user,
+      );
       return ctx.prisma.favoriteRestaurant.update({
         where: {
           restaurantId_userId: {
             restaurantId: input.id,
-            userId: selectedUserId,
+            userId: ownerId,
           },
         },
         data: {

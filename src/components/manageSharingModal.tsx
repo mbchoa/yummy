@@ -1,5 +1,6 @@
 import { Dialog, Transition } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
+import { CollaboratorRole, CollaboratorStatus } from "@prisma/client";
 import React, { Fragment, useState } from "react";
 import { trpc } from "../utils/trpc";
 import { Button } from "./button";
@@ -14,6 +15,10 @@ interface IManageSharingModalProps {
 interface ISharingRowProps {
   name: string | null;
   email: string | null;
+  // e.g. their role, shown under the name
+  detail?: React.ReactNode;
+  // e.g. a role picker, shown before the action button
+  controls?: React.ReactNode;
   actionLabel: string;
   confirmText: string;
   isWorking: boolean;
@@ -23,6 +28,8 @@ interface ISharingRowProps {
 const SharingRow = ({
   name,
   email,
+  detail,
+  controls,
   actionLabel,
   confirmText,
   isWorking,
@@ -40,15 +47,19 @@ const SharingRow = ({
           {name !== null && email !== null && (
             <p className="truncate text-xs text-gray-500">{email}</p>
           )}
+          {detail}
         </div>
         {!isConfirming && (
-          <Button
-            size="sm"
-            variant="outlined"
-            onClick={() => setIsConfirming(true)}
-          >
-            {actionLabel}
-          </Button>
+          <div className="flex shrink-0 items-center gap-2">
+            {controls}
+            <Button
+              size="sm"
+              variant="outlined"
+              onClick={() => setIsConfirming(true)}
+            >
+              {actionLabel}
+            </Button>
+          </div>
         )}
       </div>
       {isConfirming && (
@@ -85,6 +96,8 @@ export const ManageSharingModal = ({
     trpc.collaborator.remove.useMutation();
   const { mutateAsync: leaveList, isLoading: isLeaving } =
     trpc.collaborator.leave.useMutation();
+  const { mutateAsync: setRole, isLoading: isSettingRole } =
+    trpc.collaborator.setRole.useMutation();
 
   return (
     <Transition appear show={isOpen} as={Fragment}>
@@ -132,29 +145,79 @@ export const ManageSharingModal = ({
 
                 <section className="mt-4">
                   <h4 className="text-xs font-semibold uppercase text-gray-500">
-                    People who can edit your list
+                    People with access to your list
                   </h4>
                   {collaborators !== undefined && collaborators.length === 0 ? (
                     <p className="py-2 text-sm text-gray-500">
-                      Nobody yet. Use &ldquo;Add collaborator&rdquo; to share
-                      your list.
+                      Nobody yet. Use &ldquo;Invite someone&rdquo; to share your
+                      list.
                     </p>
                   ) : (
                     <ul className="divide-y divide-gray-100">
-                      {(collaborators ?? []).map((collaborator) => (
-                        <SharingRow
-                          key={collaborator.id}
-                          name={collaborator.collaborator.name}
-                          email={collaborator.collaborator.email}
-                          actionLabel="Remove"
-                          confirmText="They'll no longer be able to see or edit your list."
-                          isWorking={isRemoving}
-                          onConfirm={async () => {
-                            await removeCollaborator({ id: collaborator.id });
-                            await refetchCollaborators();
-                          }}
-                        />
-                      ))}
+                      {(collaborators ?? []).map((collaborator) => {
+                        const isPending =
+                          collaborator.status === CollaboratorStatus.PENDING;
+                        return (
+                          <SharingRow
+                            key={collaborator.id}
+                            name={collaborator.collaborator.name}
+                            email={collaborator.collaborator.email}
+                            detail={
+                              isPending && (
+                                <p className="text-xs text-gray-500">
+                                  Invited as{" "}
+                                  {collaborator.role === CollaboratorRole.EDITOR
+                                    ? "an editor"
+                                    : "a viewer"}
+                                  , hasn&apos;t answered yet
+                                </p>
+                              )
+                            }
+                            controls={
+                              !isPending && (
+                                <label>
+                                  <span className="sr-only">
+                                    Role for{" "}
+                                    {collaborator.collaborator.name ??
+                                      collaborator.collaborator.email}
+                                  </span>
+                                  <select
+                                    className="rounded py-1 pl-2 pr-7 text-sm"
+                                    value={collaborator.role}
+                                    disabled={isSettingRole}
+                                    onChange={async (event) => {
+                                      await setRole({
+                                        id: collaborator.id,
+                                        role: event.target
+                                          .value as CollaboratorRole,
+                                      });
+                                      await refetchCollaborators();
+                                    }}
+                                  >
+                                    <option value={CollaboratorRole.EDITOR}>
+                                      Editor
+                                    </option>
+                                    <option value={CollaboratorRole.VIEWER}>
+                                      Viewer
+                                    </option>
+                                  </select>
+                                </label>
+                              )
+                            }
+                            actionLabel={isPending ? "Cancel invite" : "Remove"}
+                            confirmText={
+                              isPending
+                                ? "Their invite will be withdrawn."
+                                : "They'll no longer be able to see your list."
+                            }
+                            isWorking={isRemoving}
+                            onConfirm={async () => {
+                              await removeCollaborator({ id: collaborator.id });
+                              await refetchCollaborators();
+                            }}
+                          />
+                        );
+                      })}
                     </ul>
                   )}
                 </section>
@@ -172,8 +235,15 @@ export const ManageSharingModal = ({
                           key={sharedList.id}
                           name={sharedList.owner.name}
                           email={sharedList.owner.email}
+                          detail={
+                            <p className="text-xs text-gray-500">
+                              {sharedList.role === CollaboratorRole.EDITOR
+                                ? "You can edit"
+                                : "You can view"}
+                            </p>
+                          }
                           actionLabel="Leave"
-                          confirmText="You'll no longer be able to see or edit their list unless they add you again."
+                          confirmText="You'll no longer be able to see their list unless they invite you again."
                           isWorking={isLeaving}
                           onConfirm={async () => {
                             await leaveList({ ownerId: sharedList.ownerId });

@@ -76,6 +76,10 @@ function RestaurantDetail() {
       retry: false,
     },
   );
+  // viewers can see a shared list but not change it; until this loads, the
+  // controls stay hidden
+  const { data: listAccess } = trpc.userSetting.access.useQuery();
+  const canEdit = listAccess?.canEdit === true;
   // shares its cache with the dish list, so the count stays current as dishes
   // are logged or removed
   const { data: foodReviews } = trpc.foodReview.all.useQuery(
@@ -175,7 +179,8 @@ function RestaurantDetail() {
               : "Something went wrong loading it from Yelp. Try again in a moment."}
           </p>
           {yelpRestaurantError.data?.code === "NOT_FOUND" &&
-            savedRestaurant && (
+            savedRestaurant &&
+            canEdit && (
               <div className="rounded border border-gray-300 p-4">
                 <RemoveFromList
                   dishCount={foodReviews?.length}
@@ -241,7 +246,7 @@ function RestaurantDetail() {
                 size="sm"
                 color="primary"
                 variant="ghost"
-                disabled={isLoadingYelpRestaurant || isSavingLike}
+                disabled={isLoadingYelpRestaurant || isSavingLike || !canEdit}
                 onClick={handleDislikeClick}
                 ariaLabel="Dislike restaurant"
                 ariaPressed={like === Like.DISLIKE}
@@ -263,7 +268,7 @@ function RestaurantDetail() {
                 size="sm"
                 color="primary"
                 variant="ghost"
-                disabled={isLoadingYelpRestaurant || isSavingLike}
+                disabled={isLoadingYelpRestaurant || isSavingLike || !canEdit}
                 onClick={handleFavoriteClick}
                 ariaLabel="Like restaurant"
                 ariaPressed={like === Like.LIKE}
@@ -283,14 +288,20 @@ function RestaurantDetail() {
               />
             </div>
           </div>
+          {listAccess !== undefined && !canEdit && (
+            <p className="mt-4 rounded bg-gray-100 px-3 py-2 text-sm text-gray-600">
+              You can view this list but not change it.
+            </p>
+          )}
           <hr className="my-6" />
           {like !== Like.UNSELECTED ? (
             <>
               <FavoriteFoods
                 openModal={openModal}
                 restaurantId={restaurantId}
+                canEdit={canEdit}
               />
-              {savedRestaurant && (
+              {savedRestaurant && canEdit && (
                 <div className="mt-6">
                   <RemoveFromList
                     dishCount={foodReviews?.length}
@@ -305,8 +316,9 @@ function RestaurantDetail() {
               <section className="space-y-4">
                 <h2 className="text-xl font-medium">Personal Reviews</h2>
                 <p className="rounded border border-gray-300 p-4 text-sm text-gray-600">
-                  Rate this restaurant with a thumbs up or down to save it to
-                  your list. Then you can log the dishes you tried.
+                  {canEdit
+                    ? "Rate this restaurant with a thumbs up or down to save it to your list. Then you can log the dishes you tried."
+                    : "This restaurant isn't on this list."}
                 </p>
               </section>
             )
@@ -333,6 +345,8 @@ function RestaurantDetail() {
     isLoading,
     isSavingLike,
     like,
+    listAccess,
+    canEdit,
     handleFavoriteClick,
     openModal,
     restaurantId,

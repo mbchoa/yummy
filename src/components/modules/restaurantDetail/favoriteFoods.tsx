@@ -15,11 +15,14 @@ type FoodReview = RouterOutputs["foodReview"]["all"][number];
 interface IFavoriteFoodsProps {
   openModal: () => void;
   restaurantId: string;
+  // viewers see the dishes but can't change them
+  canEdit: boolean;
 }
 
 export const FavoriteFoods = ({
   openModal,
   restaurantId,
+  canEdit,
 }: IFavoriteFoodsProps) => {
   const { data: session } = useSession();
   const { data: favoriteRestaurant, isLoading: isFavoriteRestaurantLoading } =
@@ -160,7 +163,9 @@ export const FavoriteFoods = ({
     if (foodReviews.length === 0) {
       return (
         <p className="rounded border border-gray-300 p-4 text-sm text-gray-600">
-          No dishes logged yet. Use “Log a dish” to record what you ordered.
+          {canEdit
+            ? "No dishes logged yet. Use “Log a dish” to record what you ordered."
+            : "No dishes logged yet."}
         </p>
       );
     }
@@ -227,13 +232,18 @@ export const FavoriteFoods = ({
                         {foodReview.review}
                       </p>
                     )}
-                    <button
-                      type="button"
-                      className="text-xs text-indigo-600 hover:underline"
-                      onClick={handleEditNote(foodReview.id, foodReview.review)}
-                    >
-                      {foodReview.review !== null ? "Edit note" : "Add note"}
-                    </button>
+                    {canEdit && (
+                      <button
+                        type="button"
+                        className="text-xs text-indigo-600 hover:underline"
+                        onClick={handleEditNote(
+                          foodReview.id,
+                          foodReview.review,
+                        )}
+                      >
+                        {foodReview.review !== null ? "Edit note" : "Add note"}
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
@@ -244,6 +254,7 @@ export const FavoriteFoods = ({
                   ariaLabel={`Dislike ${foodReview.restaurantItem.name}`}
                   ariaPressed={foodReview.like === "DISLIKE"}
                   title="Dislike"
+                  disabled={!canEdit}
                   LeftIcon={
                     <HandThumbDownIcon
                       className={classNames(
@@ -268,16 +279,19 @@ export const FavoriteFoods = ({
                   ariaLabel={`Like ${foodReview.restaurantItem.name}`}
                   ariaPressed={foodReview.like === "LIKE"}
                   title="Like"
+                  disabled={!canEdit}
                   onClick={handleLikeFoodReview(foodReview.id)}
                 />
-                <Button
-                  size="sm"
-                  LeftIcon={<TrashIcon className="h-4 w-4 stroke-red-400" />}
-                  variant="ghost"
-                  ariaLabel={`Remove ${foodReview.restaurantItem.name}`}
-                  title="Remove"
-                  onClick={handleRemoveFoodReview(foodReview)}
-                />
+                {canEdit && (
+                  <Button
+                    size="sm"
+                    LeftIcon={<TrashIcon className="h-4 w-4 stroke-red-400" />}
+                    variant="ghost"
+                    ariaLabel={`Remove ${foodReview.restaurantItem.name}`}
+                    title="Remove"
+                    onClick={handleRemoveFoodReview(foodReview)}
+                  />
+                )}
               </div>
             </li>
           ))}
@@ -299,15 +313,18 @@ export const FavoriteFoods = ({
     handleNoteDraftChange,
     handleCancelNote,
     handleEditNote,
+    canEdit,
   ]);
 
   return (
     <section className="space-y-4">
       <header className="flex justify-between">
         <h2 className="text-xl font-medium">Personal Reviews</h2>
-        <Button size="sm" onClick={openModal}>
-          Log a dish
-        </Button>
+        {canEdit && (
+          <Button size="sm" onClick={openModal}>
+            Log a dish
+          </Button>
+        )}
       </header>
       {maybeRenderBody()}
     </section>

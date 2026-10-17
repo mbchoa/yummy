@@ -25,7 +25,7 @@ const features = [
   {
     name: "Share lists",
     description:
-      "Add collaborators so friends and family can see and add to your list.",
+      "Invite friends and family to see your list, or to add to it too.",
     icon: UsersIcon,
   },
 ];

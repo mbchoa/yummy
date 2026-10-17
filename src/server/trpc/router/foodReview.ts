@@ -1,8 +1,13 @@
 import type { PrismaClient } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
-import type { Session } from "next-auth";
 import { z } from "zod";
 import { protectedProcedure, router } from "../trpc";
+import {
+  assertCanEdit,
+  getAccessToList,
+  getEditableListOwnerId,
+  getListAccess,
+} from "./helpers/listAccess";
 
 // notes are optional; a blank note is stored as null
 const noteSchema = z
@@ -15,7 +20,7 @@ export const foodReview = router({
   all: protectedProcedure
     .input(z.object({ restaurantId: z.string() }))
     .query(async ({ ctx, input }) => {
-      const ownerId = await getListOwnerId(ctx.prisma, ctx.session.user);
+      const { ownerId } = await getListAccess(ctx.prisma, ctx.session.user);
 
       // filtered by the list's owner rather than the reviewer, so dishes
       // logged by collaborators are included
@@ -53,7 +58,10 @@ export const foodReview = router({
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      const ownerId = await getListOwnerId(ctx.prisma, ctx.session.user);
+      const ownerId = await getEditableListOwnerId(
+        ctx.prisma,
+        ctx.session.user,
+      );
 
       await assertDishNotLogged(
         ctx.prisma,
@@ -128,44 +136,6 @@ export const foodReview = router({
     }),
 });
 
-// the owner of the list the user is viewing: themselves, or someone who shared
-// their list with them
-const getListOwnerId = async (
-  prisma: PrismaClient,
-  user: NonNullable<Session["user"]>,
-) => {
-  if (user.settings === null) {
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "User settings not found",
-    });
-  }
-
-  const { selectedUserId } = user.settings;
-  if (selectedUserId === user.id) {
-    return selectedUserId;
-  }
-
-  // check if use has access to selected user in user settings
-  const collaborator = await prisma.collaborator.findUnique({
-    where: {
-      collaboratorId_ownerId: {
-        collaboratorId: user.id,
-        ownerId: selectedUserId,
-      },
-    },
-  });
-
-  if (collaborator === null) {
-    throw new TRPCError({
-      code: "UNAUTHORIZED",
-      message: "User does not have access to selected user's favorites list",
-    });
-  }
-
-  return selectedUserId;
-};
-
 // each dish is listed once per restaurant; adding a second review for it would
 // show up as a duplicate entry
 const assertDishNotLogged = async (
@@ -191,8 +161,8 @@ const assertDishNotLogged = async (
   }
 };
 
-// a food review can be edited by the owner of the list it belongs to, or by
-// one of that owner's collaborators
+// a food review can be changed by the owner of the list it belongs to, or by
+// an editor on that list
 const assertCanEditFoodReview = async (
   prisma: PrismaClient,
   userId: string,
@@ -218,24 +188,7 @@ const assertCanEditFoodReview = async (
     });
   }
 
-  const ownerId = foodReview.restaurantItem.userId;
-  if (ownerId === userId) {
-    return;
-  }
-
-  const collaborator = await prisma.collaborator.findUnique({
-    where: {
-      collaboratorId_ownerId: {
-        collaboratorId: userId,
-        ownerId,
-      },
-    },
-  });
-
-  if (collaborator === null) {
-    throw new TRPCError({
-      code: "UNAUTHORIZED",
-      message: "User does not have access to this food review",
-    });
-  }
+  assertCanEdit(
+    await getAccessToList(prisma, userId, foodReview.restaurantItem.userId),
+  );
 };
