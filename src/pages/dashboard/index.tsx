@@ -11,19 +11,53 @@ import type { IYelpBusinessSchema } from "../../models/YelpSchemas";
 import { requireAuth } from "../../server/common/require-auth";
 import { trpc } from "../../utils/trpc";
 
-const TABS = ["Favorites", "Dislikes"] as const;
+// the tab's slug is kept in the URL (?tab=), so refresh and back keep it
+const TABS = [
+  { like: Like.LIKE, label: "Liked", slug: undefined },
+  { like: Like.DISLIKE, label: "Disliked", slug: "dislikes" },
+  { like: Like.WANT_TO_TRY, label: "Want to try", slug: "want-to-try" },
+] as const;
+
+type Restaurant = SnakeToCamelCaseNested<IYelpBusinessSchema>;
+
+// a tab's saved restaurants, and their details from Yelp
+const useTabRestaurants = (
+  like: (typeof TABS)[number]["like"],
+  enabled: boolean,
+) => {
+  const saved = trpc.favoriteRestaurant.all.useQuery(
+    { like },
+    { enabled, keepPreviousData: true },
+  );
+  const yelp = trpc.yelp.byIds.useQuery(
+    (saved.data ?? []).map((restaurant) => restaurant.restaurantId),
+    {
+      enabled: saved.data !== undefined,
+      keepPreviousData: true,
+      trpc: {
+        context: {
+          skipBatch: true,
+        },
+      },
+    },
+  );
+  return { saved, yelp };
+};
 
 export default function Dashboard() {
   const { data: session } = useSession();
   const router = useRouter<"/dashboard">();
-  // the selected tab lives in the URL, so refresh and back keep it
-  const selectedTabIndex = router.query.tab === "dislikes" ? 1 : 0;
+  const selectedTabIndex = Math.max(
+    0,
+    TABS.findIndex((tab) => tab.slug === router.query.tab),
+  );
   const handleTabChange = useCallback(
     (index: number) => {
+      const slug = TABS[index]?.slug;
       router.replace(
         {
           pathname: "/dashboard",
-          query: index === 1 ? { tab: "dislikes" } : {},
+          query: slug !== undefined ? { tab: slug } : {},
         },
         undefined,
         { shallow: true },
@@ -33,94 +67,68 @@ export default function Dashboard() {
   );
   const [filter, setFilter] = useState("");
   const normalizedFilter = filter.trim().toLowerCase();
-  const {
-    data: favoriteRestaurants,
-    isLoading: isLoadingFavoriteRestaurants,
-    refetch: refetchFavoriteRestaurants,
-  } = trpc.favoriteRestaurant.all.useQuery(
-    { like: Like.LIKE },
-    { enabled: session !== undefined, keepPreviousData: true },
-  );
-  const {
-    data: likedYelpRestaurants,
-    isLoading: isLoadingFavoriteYelpRestaurants,
-    isPreviousData: isPreviousLikedYelpRestaurants,
-    refetch: refetchLikedYelpRestaurants,
-  } = trpc.yelp.byIds.useQuery(
-    (favoriteRestaurants ?? []).map(
-      (favoriteRestaurant) => favoriteRestaurant.restaurantId,
-    ),
-    {
-      enabled: favoriteRestaurants !== undefined,
-      keepPreviousData: true,
-      trpc: {
-        context: {
-          skipBatch: true,
-        },
-      },
-    },
-  );
-  const {
-    data: dislikedRestaurants,
-    isLoading: isLoadingDislikedRestaurants,
-    refetch: refetchDislikedRestaurants,
-  } = trpc.favoriteRestaurant.all.useQuery(
-    { like: Like.DISLIKE },
-    { enabled: session !== undefined, keepPreviousData: true },
-  );
-  const {
-    data: dislikedYelpRestaurants,
-    isLoading: isLoadingDislikedYelpRestaurants,
-    isPreviousData: isPreviousDislikedYelpRestaurants,
-    refetch: refetchDislikedYelpRestaurants,
-  } = trpc.yelp.byIds.useQuery(
-    (dislikedRestaurants ?? []).map(
-      (dislikedRestaurant) => dislikedRestaurant.restaurantId,
-    ),
-    {
-      enabled: dislikedRestaurants !== undefined,
-      keepPreviousData: true,
-      trpc: {
-        context: {
-          skipBatch: true,
-        },
-      },
-    },
-  );
+  const liked = useTabRestaurants(Like.LIKE, session !== undefined);
+  const disliked = useTabRestaurants(Like.DISLIKE, session !== undefined);
+  const wantToTry = useTabRestaurants(Like.WANT_TO_TRY, session !== undefined);
 
   const refetch = useCallback(async () => {
-    await refetchFavoriteRestaurants();
-    await refetchLikedYelpRestaurants();
-    await refetchDislikedRestaurants();
-    await refetchDislikedYelpRestaurants();
-  }, [
-    refetchDislikedRestaurants,
-    refetchDislikedYelpRestaurants,
-    refetchFavoriteRestaurants,
-    refetchLikedYelpRestaurants,
-  ]);
+    for (const { saved, yelp } of [liked, disliked, wantToTry]) {
+      await saved.refetch();
+      await yelp.refetch();
+    }
+  }, [liked, disliked, wantToTry]);
 
-  const likedDishNamesByRestaurantId = useMemo(() => {
-    const names: Record<string, string[]> = {};
-    [...(favoriteRestaurants ?? []), ...(dislikedRestaurants ?? [])].forEach(
-      (restaurant) => {
-        names[restaurant.restaurantId] = restaurant.restaurantItems.map(
-          (restaurantItem) => restaurantItem.name,
-        );
-      },
-    );
-    return names;
-  }, [favoriteRestaurants, dislikedRestaurants]);
+  // what's saved about each restaurant, across all tabs
+  const savedRestaurants = useMemo(
+    () => [
+      ...(liked.saved.data ?? []),
+      ...(disliked.saved.data ?? []),
+      ...(wantToTry.saved.data ?? []),
+    ],
+    [liked.saved.data, disliked.saved.data, wantToTry.saved.data],
+  );
+  const likedDishNamesByRestaurantId = useMemo(
+    () =>
+      Object.fromEntries(
+        savedRestaurants.map((restaurant) => [
+          restaurant.restaurantId,
+          restaurant.restaurantItems.map(
+            (restaurantItem) => restaurantItem.name,
+          ),
+        ]),
+      ),
+    [savedRestaurants],
+  );
+  const dishCountByRestaurantId = useMemo(
+    () =>
+      Object.fromEntries(
+        savedRestaurants.map((restaurant) => [
+          restaurant.restaurantId,
+          restaurant._count.restaurantItems,
+        ]),
+      ),
+    [savedRestaurants],
+  );
+  const noteByRestaurantId = useMemo(
+    () =>
+      Object.fromEntries(
+        savedRestaurants.map((restaurant) => [
+          restaurant.restaurantId,
+          restaurant.note,
+        ]),
+      ),
+    [savedRestaurants],
+  );
 
   const data = useMemo(() => {
-    const matchesDishes = (restaurantId: string) =>
-      (likedDishNamesByRestaurantId[restaurantId] ?? []).some((name) =>
-        name.toLowerCase().includes(normalizedFilter),
-      );
-    // matches the restaurant's name, city, categories or liked dishes
-    const filterRestaurants = (
-      restaurants: SnakeToCamelCaseNested<IYelpBusinessSchema>[],
-    ) =>
+    // matches the restaurant's liked dishes or its note
+    const matchesSaved = (restaurantId: string) =>
+      [
+        ...(likedDishNamesByRestaurantId[restaurantId] ?? []),
+        noteByRestaurantId[restaurantId] ?? "",
+      ].some((text) => text.toLowerCase().includes(normalizedFilter));
+    // matches the restaurant's name, city, categories, liked dishes or note
+    const filterRestaurants = (restaurants: Restaurant[]) =>
       normalizedFilter.length === 0
         ? restaurants
         : restaurants.filter(
@@ -130,73 +138,35 @@ export default function Dashboard() {
                 restaurant.location.city,
                 ...restaurant.categories.map((category) => category.title),
               ].some((text) => text.toLowerCase().includes(normalizedFilter)) ||
-              matchesDishes(restaurant.id),
+              matchesSaved(restaurant.id),
           );
-    // missing restaurants have no Yelp details, so only their dishes can match
+    // missing restaurants have no Yelp details, so only what's saved can match
     const filterMissing = (restaurantIds: string[]) =>
       normalizedFilter.length === 0
         ? restaurantIds
-        : restaurantIds.filter(matchesDishes);
+        : restaurantIds.filter(matchesSaved);
 
-    return {
-      Favorites: {
-        restaurantsGroupedByCity:
-          likedYelpRestaurants !== undefined
-            ? groupRestaurantsByCity(filterRestaurants(likedYelpRestaurants))
-            : undefined,
-        missingRestaurantIds: filterMissing(
-          findMissingRestaurantIds(
-            favoriteRestaurants,
-            likedYelpRestaurants,
-            isPreviousLikedYelpRestaurants,
-          ),
-        ),
-        isLoading:
-          isLoadingFavoriteRestaurants || isLoadingFavoriteYelpRestaurants,
-      },
-      Dislikes: {
-        restaurantsGroupedByCity:
-          dislikedYelpRestaurants !== undefined
-            ? groupRestaurantsByCity(filterRestaurants(dislikedYelpRestaurants))
-            : undefined,
-        missingRestaurantIds: filterMissing(
-          findMissingRestaurantIds(
-            dislikedRestaurants,
-            dislikedYelpRestaurants,
-            isPreviousDislikedYelpRestaurants,
-          ),
-        ),
-        isLoading:
-          isLoadingDislikedRestaurants || isLoadingDislikedYelpRestaurants,
-      },
-    };
+    return [liked, disliked, wantToTry].map(({ saved, yelp }) => ({
+      restaurantsGroupedByCity:
+        yelp.data !== undefined
+          ? groupRestaurantsByCity(filterRestaurants(yelp.data))
+          : undefined,
+      missingRestaurantIds: filterMissing(
+        findMissingRestaurantIds(saved.data, yelp.data, yelp.isPreviousData),
+      ),
+      isLoading: saved.isLoading || yelp.isLoading,
+    }));
   }, [
-    dislikedRestaurants,
-    dislikedYelpRestaurants,
-    favoriteRestaurants,
-    isLoadingDislikedRestaurants,
-    isLoadingDislikedYelpRestaurants,
-    isLoadingFavoriteRestaurants,
-    isLoadingFavoriteYelpRestaurants,
-    isPreviousDislikedYelpRestaurants,
-    isPreviousLikedYelpRestaurants,
+    liked,
+    disliked,
+    wantToTry,
     likedDishNamesByRestaurantId,
-    likedYelpRestaurants,
+    noteByRestaurantId,
     normalizedFilter,
   ]);
 
-  const dishCountByRestaurantId = useMemo(() => {
-    const counts: Record<string, number> = {};
-    [...(favoriteRestaurants ?? []), ...(dislikedRestaurants ?? [])].forEach(
-      (restaurant) => {
-        counts[restaurant.restaurantId] = restaurant._count.restaurantItems;
-      },
-    );
-    return counts;
-  }, [favoriteRestaurants, dislikedRestaurants]);
-
   const maybeRenderPanels = useCallback(() => {
-    return Object.values(data).map(
+    return data.map(
       ({ isLoading, restaurantsGroupedByCity, missingRestaurantIds }, idx) => (
         <Tab.Panel
           key={idx}
@@ -212,7 +182,9 @@ export default function Dashboard() {
             missingRestaurantIds={missingRestaurantIds}
             dishCountByRestaurantId={dishCountByRestaurantId}
             likedDishNamesByRestaurantId={likedDishNamesByRestaurantId}
+            noteByRestaurantId={noteByRestaurantId}
             isFiltered={normalizedFilter.length > 0}
+            isWantToTry={TABS[idx]?.like === Like.WANT_TO_TRY}
           />
         </Tab.Panel>
       ),
@@ -221,6 +193,7 @@ export default function Dashboard() {
     data,
     dishCountByRestaurantId,
     likedDishNamesByRestaurantId,
+    noteByRestaurantId,
     normalizedFilter,
   ]);
 
@@ -228,14 +201,14 @@ export default function Dashboard() {
     <Layout>
       <div className="px-4">
         <Tab.Group selectedIndex={selectedTabIndex} onChange={handleTabChange}>
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <Tab.List className="flex space-x-1 rounded-xl bg-gray-200 p-1">
-              {TABS.map((category) => (
+              {TABS.map((tab) => (
                 <Tab
-                  key={category}
+                  key={tab.label}
                   className={({ selected }) =>
                     classNames(
-                      "rounded-lg px-6 py-2 text-sm font-medium leading-5 transition-all",
+                      "whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium leading-5 transition-all sm:px-6",
                       "ring-white ring-opacity-60 ring-offset-2 ring-offset-indigo-400 focus:outline-none focus:ring-2",
                       selected
                         ? "bg-white text-indigo-600 shadow"
@@ -243,7 +216,7 @@ export default function Dashboard() {
                     )
                   }
                 >
-                  {category}
+                  {tab.label}
                 </Tab>
               ))}
             </Tab.List>
@@ -254,7 +227,7 @@ export default function Dashboard() {
             <input
               type="search"
               className="w-full rounded border px-3 py-2 text-sm outline-indigo-500"
-              placeholder="Filter by name, city, cuisine or dish"
+              placeholder="Filter by name, city, cuisine, dish or note"
               value={filter}
               onChange={(event) => setFilter(event.target.value)}
             />

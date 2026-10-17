@@ -81,6 +81,11 @@ model FavoriteRestaurant {
   restaurantId    String
   userId          String
   like            Like             @default(LIKE)
+  // one note about the restaurant, e.g. who recommended it
+  note            String?
+  // removing a restaurant hides it rather than deleting it, so saving it
+  // again brings back its dishes and note
+  removedAt       DateTime?
   user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   restaurantItems RestaurantItem[]
 
@@ -116,6 +121,8 @@ enum Like {
   LIKE
   DISLIKE
   UNSELECTED
+  // restaurants only: saved, not visited yet
+  WANT_TO_TRY
 }
 
 model Collaborator {

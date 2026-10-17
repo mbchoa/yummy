@@ -3,6 +3,7 @@ import {
   HandThumbUpIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
+import { Like } from "@prisma/client";
 import classNames from "classnames";
 import { useSession } from "next-auth/react";
 import { useCallback, useState } from "react";
@@ -77,7 +78,8 @@ export const FavoriteFoods = ({
           await addFoodReview({
             restaurantId,
             name: foodReview.restaurantItem.name,
-            like: foodReview.like,
+            // only restaurants can be want-to-try, never dishes
+            like: foodReview.like as Exclude<Like, typeof Like.WANT_TO_TRY>,
             review: foodReview.review ?? undefined,
           });
           await refetchFoodReviews();
@@ -170,133 +172,118 @@ export const FavoriteFoods = ({
       );
     }
 
-    const likedDishNames = foodReviews
-      .filter((foodReview) => foodReview.like === "LIKE")
-      .map((foodReview) => foodReview.restaurantItem.name);
-
     return (
-      <div className="space-y-4">
-        {likedDishNames.length > 0 && (
-          <p className="rounded bg-green-50 px-3 py-2 text-sm text-green-900">
-            <span className="font-medium">What to order:</span>{" "}
-            {likedDishNames.join(", ")}
-          </p>
-        )}
-        <ul className="space-y-2">
-          {foodReviews.map((foodReview) => (
-            <li
-              key={foodReview.id}
-              className="flex items-start justify-between gap-4"
-            >
-              <div className="min-w-0 flex-1">
-                <p>{foodReview.restaurantItem.name}</p>
-                {foodReview.reviewedBy !== null &&
-                  foodReview.reviewedBy.id !== session?.user?.id && (
-                    <p className="text-xs text-gray-500">
-                      Logged by {foodReview.reviewedBy.name ?? "a collaborator"}
+      <ul className="space-y-2">
+        {foodReviews.map((foodReview) => (
+          <li
+            key={foodReview.id}
+            className="flex items-start justify-between gap-4"
+          >
+            <div className="min-w-0 flex-1">
+              <p>{foodReview.restaurantItem.name}</p>
+              {foodReview.reviewedBy !== null &&
+                foodReview.reviewedBy.id !== session?.user?.id && (
+                  <p className="text-xs text-gray-500">
+                    Logged by {foodReview.reviewedBy.name ?? "a collaborator"}
+                  </p>
+                )}
+              {editingNoteId === foodReview.id ? (
+                <form className="mt-1 space-y-2" onSubmit={handleSaveNote}>
+                  <textarea
+                    className="w-full rounded text-sm"
+                    aria-label={`Note for ${foodReview.restaurantItem.name}`}
+                    rows={3}
+                    maxLength={500}
+                    value={noteDraft}
+                    onChange={handleNoteDraftChange}
+                    autoFocus
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      type="submit"
+                      isLoading={isUpdatingFoodReview}
+                    >
+                      Save
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      type="button"
+                      onClick={handleCancelNote}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </form>
+              ) : (
+                <div className="space-y-0.5">
+                  {foodReview.review !== null && (
+                    <p className="whitespace-pre-line text-sm text-gray-600">
+                      {foodReview.review}
                     </p>
                   )}
-                {editingNoteId === foodReview.id ? (
-                  <form className="mt-1 space-y-2" onSubmit={handleSaveNote}>
-                    <textarea
-                      className="w-full rounded text-sm"
-                      aria-label={`Note for ${foodReview.restaurantItem.name}`}
-                      rows={3}
-                      maxLength={500}
-                      value={noteDraft}
-                      onChange={handleNoteDraftChange}
-                      autoFocus
-                    />
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        type="submit"
-                        isLoading={isUpdatingFoodReview}
-                      >
-                        Save
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        type="button"
-                        onClick={handleCancelNote}
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  </form>
-                ) : (
-                  <div className="space-y-0.5">
-                    {foodReview.review !== null && (
-                      <p className="whitespace-pre-line text-sm text-gray-600">
-                        {foodReview.review}
-                      </p>
+                  {canEdit && (
+                    <button
+                      type="button"
+                      className="text-xs text-indigo-600 hover:underline"
+                      onClick={handleEditNote(foodReview.id, foodReview.review)}
+                    >
+                      {foodReview.review !== null ? "Edit note" : "Add note"}
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                size="sm"
+                variant="ghost"
+                ariaLabel={`Dislike ${foodReview.restaurantItem.name}`}
+                ariaPressed={foodReview.like === "DISLIKE"}
+                title="Dislike"
+                disabled={!canEdit}
+                LeftIcon={
+                  <HandThumbDownIcon
+                    className={classNames(
+                      "h-5 w-5 stroke-slate-600",
+                      foodReview.like === "DISLIKE" && "fill-red-500",
                     )}
-                    {canEdit && (
-                      <button
-                        type="button"
-                        className="text-xs text-indigo-600 hover:underline"
-                        onClick={handleEditNote(
-                          foodReview.id,
-                          foodReview.review,
-                        )}
-                      >
-                        {foodReview.review !== null ? "Edit note" : "Add note"}
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-              <div className="flex items-center space-x-2">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  ariaLabel={`Dislike ${foodReview.restaurantItem.name}`}
-                  ariaPressed={foodReview.like === "DISLIKE"}
-                  title="Dislike"
-                  disabled={!canEdit}
-                  LeftIcon={
-                    <HandThumbDownIcon
-                      className={classNames(
-                        "h-5 w-5 stroke-slate-600",
-                        foodReview.like === "DISLIKE" && "fill-red-500",
-                      )}
-                    />
-                  }
-                  onClick={handleDislikeFoodReview(foodReview.id)}
-                />
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  LeftIcon={
-                    <HandThumbUpIcon
-                      className={classNames(
-                        "h-5 w-5 stroke-slate-600",
-                        foodReview.like === "LIKE" && "fill-green-500",
-                      )}
-                    />
-                  }
-                  ariaLabel={`Like ${foodReview.restaurantItem.name}`}
-                  ariaPressed={foodReview.like === "LIKE"}
-                  title="Like"
-                  disabled={!canEdit}
-                  onClick={handleLikeFoodReview(foodReview.id)}
-                />
-                {canEdit && (
-                  <Button
-                    size="sm"
-                    LeftIcon={<TrashIcon className="h-4 w-4 stroke-red-400" />}
-                    variant="ghost"
-                    ariaLabel={`Remove ${foodReview.restaurantItem.name}`}
-                    title="Remove"
-                    onClick={handleRemoveFoodReview(foodReview)}
                   />
-                )}
-              </div>
-            </li>
-          ))}
-        </ul>
-      </div>
+                }
+                onClick={handleDislikeFoodReview(foodReview.id)}
+              />
+              <Button
+                size="sm"
+                variant="ghost"
+                LeftIcon={
+                  <HandThumbUpIcon
+                    className={classNames(
+                      "h-5 w-5 stroke-slate-600",
+                      foodReview.like === "LIKE" && "fill-green-500",
+                    )}
+                  />
+                }
+                ariaLabel={`Like ${foodReview.restaurantItem.name}`}
+                ariaPressed={foodReview.like === "LIKE"}
+                title="Like"
+                disabled={!canEdit}
+                onClick={handleLikeFoodReview(foodReview.id)}
+              />
+              {canEdit && (
+                <Button
+                  size="sm"
+                  LeftIcon={<TrashIcon className="h-4 w-4 stroke-red-400" />}
+                  variant="ghost"
+                  ariaLabel={`Remove ${foodReview.restaurantItem.name}`}
+                  title="Remove"
+                  onClick={handleRemoveFoodReview(foodReview)}
+                />
+              )}
+            </div>
+          </li>
+        ))}
+      </ul>
     );
   }, [
     favoriteRestaurant,

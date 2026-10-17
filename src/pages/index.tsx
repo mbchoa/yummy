@@ -13,7 +13,7 @@ const features = [
   {
     name: "Save restaurants",
     description:
-      "Find any restaurant on Yelp and keep a list of the ones you love and the ones to skip.",
+      "Find any restaurant on Yelp and keep a list of the ones you love, the ones to skip, and the ones you want to try.",
     icon: BookmarkIcon,
   },
   {
@@ -49,7 +49,7 @@ const Home: NextPage = () => {
         <title>yummy</title>
         <meta
           name="description"
-          content="A personal restaurant and dish journal powered by Yelp. Save favorite restaurants, rate dishes and share your list with collaborators."
+          content="A personal restaurant and dish journal powered by Yelp. Save restaurants you like, dislike or want to try, rate dishes and share your list with collaborators."
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>

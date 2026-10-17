@@ -1,11 +1,19 @@
 import { Combobox } from "@headlessui/react";
-import { MapPinIcon } from "@heroicons/react/24/outline";
+import {
+  BookmarkIcon,
+  HandThumbDownIcon,
+  HandThumbUpIcon,
+  MapPinIcon,
+} from "@heroicons/react/24/outline";
+import { BookmarkIcon as BookmarkSolidIcon } from "@heroicons/react/24/solid";
+import { Like } from "@prisma/client";
 import classNames from "classnames";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import { useCallback, useEffect, useState } from "react";
 import { retryServerErrors } from "../utils/retryServerErrors";
 import { trpc, type RouterOutputs } from "../utils/trpc";
+import { showToast } from "./toast";
 import { YelpLogo, YelpStars } from "./yelp";
 
 type Business = RouterOutputs["yelp"]["search"]["businesses"][number];
@@ -46,6 +54,29 @@ export const SearchWidget = () => {
       },
     );
 
+  // how each result is already saved, so it shows its state instead of 🔖
+  const resultIds = data?.businesses.map((business) => business.id) ?? [];
+  const { data: statuses, refetch: refetchStatuses } =
+    trpc.favoriteRestaurant.statuses.useQuery(
+      { ids: resultIds },
+      { enabled: resultIds.length > 0 },
+    );
+  const { data: listAccess } = trpc.userSetting.access.useQuery();
+  const { mutateAsync: addRestaurant, isLoading: isSaving } =
+    trpc.favoriteRestaurant.add.useMutation();
+  const utils = trpc.useContext();
+
+  // saves a place someone recommended without leaving the search
+  const handleSaveToTry = useCallback(
+    async (business: Business) => {
+      await addRestaurant({ id: business.id, like: Like.WANT_TO_TRY });
+      await refetchStatuses();
+      utils.favoriteRestaurant.all.invalidate();
+      showToast(`Saved ${business.name} to Want to try.`);
+    },
+    [addRestaurant, refetchStatuses, utils],
+  );
+
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       if (searchTerm.length > 0 && location.length > 0) {
@@ -70,6 +101,57 @@ export const SearchWidget = () => {
     },
     [router],
   );
+
+  const renderSaveState = (business: Business) => {
+    const savedLike = statuses?.find(
+      (status) => status.restaurantId === business.id,
+    )?.like;
+    if (savedLike === Like.LIKE) {
+      return (
+        <HandThumbUpIcon
+          className="h-5 w-5 shrink-0 fill-green-500 stroke-green-700"
+          aria-label="Liked"
+        />
+      );
+    }
+    if (savedLike === Like.DISLIKE) {
+      return (
+        <HandThumbDownIcon
+          className="h-5 w-5 shrink-0 fill-red-500 stroke-red-700"
+          aria-label="Disliked"
+        />
+      );
+    }
+    if (savedLike === Like.WANT_TO_TRY) {
+      return (
+        <BookmarkSolidIcon
+          className="h-5 w-5 shrink-0 text-indigo-500"
+          aria-label="Want to try"
+        />
+      );
+    }
+    if (listAccess?.canEdit !== true || statuses === undefined) {
+      return null;
+    }
+    return (
+      <button
+        type="button"
+        className="shrink-0 rounded-md p-1 text-gray-400 hover:bg-indigo-50 hover:text-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        aria-label={`Save ${business.name} to try`}
+        title="Save to try"
+        disabled={isSaving}
+        // saving shouldn't also select the result and open its page
+        onMouseDown={(event) => event.preventDefault()}
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          handleSaveToTry(business);
+        }}
+      >
+        <BookmarkIcon className="h-5 w-5" aria-hidden />
+      </button>
+    );
+  };
 
   const renderSearchResultsContent = () => {
     if (isError) {
@@ -130,6 +212,7 @@ export const SearchWidget = () => {
             {business.location.displayAddress.join(", ")}
           </p>
         </div>
+        {renderSaveState(business)}
       </Combobox.Option>
     ));
   };
