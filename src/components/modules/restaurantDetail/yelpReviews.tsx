@@ -1,10 +1,9 @@
 import { UserIcon } from "@heroicons/react/24/outline";
-import { StarIcon } from "@heroicons/react/24/solid";
-import classNames from "classnames";
 import Image from "next/image";
 import { useState } from "react";
 import { retryServerErrors } from "../../../utils/retryServerErrors";
 import { trpc } from "../../../utils/trpc";
+import { YelpLogo, YelpStars } from "../../yelp";
 
 interface IYelpReviewsProps {
   restaurantId: string;
@@ -99,22 +98,9 @@ export const YelpReviews = ({ restaurantId, yelpUrl }: IYelpReviewsProps) => {
         <div className="min-w-0 flex-1 space-y-1">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
             <p className="text-sm font-medium">{review.user.name}</p>
-            <div
-              className="flex"
-              role="img"
-              aria-label={`${review.rating} out of 5 stars`}
-            >
-              {[1, 2, 3, 4, 5].map((star) => (
-                <StarIcon
-                  key={star}
-                  className={classNames(
-                    "h-4 w-4",
-                    star <= review.rating ? "text-yellow-500" : "text-gray-300",
-                  )}
-                  aria-hidden
-                />
-              ))}
-            </div>
+            <a href={review.url} target="_blank" rel="noopener noreferrer">
+              <YelpStars rating={review.rating} size="small" />
+            </a>
             <p className="text-xs text-gray-500">
               {formatReviewDate(review.timeCreated)}
             </p>
@@ -135,8 +121,11 @@ export const YelpReviews = ({ restaurantId, yelpUrl }: IYelpReviewsProps) => {
 
   return (
     <section className="space-y-4">
-      <header className="flex items-baseline justify-between">
-        <h2 className="text-xl font-medium">Yelp Reviews</h2>
+      <header className="flex items-center justify-between gap-4">
+        <h2 className="flex items-center gap-2 text-xl font-medium">
+          Reviews from
+          <YelpLogo href={yelpUrl ?? "https://www.yelp.com"} />
+        </h2>
         {yelpUrl !== undefined && (
           <a
             href={yelpUrl}

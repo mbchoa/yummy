@@ -1,11 +1,7 @@
-import {
-  ArrowTopRightOnSquareIcon,
-  MapIcon,
-  PhoneIcon,
-} from "@heroicons/react/24/outline";
-import { StarIcon } from "@heroicons/react/24/solid";
+import { MapIcon, PhoneIcon } from "@heroicons/react/24/outline";
 import uniqBy from "lodash-es/uniqBy";
 import type { RouterOutputs } from "../../../utils/trpc";
+import { YelpLogo, YelpStars } from "../../yelp";
 
 type Restaurant = RouterOutputs["yelp"]["byId"];
 
@@ -55,13 +51,15 @@ export const RestaurantInfo = ({ restaurant }: IRestaurantInfoProps) => {
   return (
     <div className="space-y-2">
       <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-gray-600">
-        <span className="flex items-center gap-1">
-          <StarIcon className="h-4 w-4 text-yellow-500" aria-hidden />
-          {restaurant.rating}
-          <span className="text-gray-400">
-            ({restaurant.reviewCount.toLocaleString()} on Yelp)
-          </span>
-        </span>
+        <a
+          href={restaurant.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 hover:underline"
+        >
+          <YelpStars rating={restaurant.rating} />
+          <span>{restaurant.reviewCount.toLocaleString()} reviews</span>
+        </a>
         {restaurant.price && (
           <>
             <span aria-hidden>&middot;</span>
@@ -100,15 +98,7 @@ export const RestaurantInfo = ({ restaurant }: IRestaurantInfoProps) => {
           <MapIcon className="h-4 w-4" aria-hidden />
           Directions
         </a>
-        <a
-          href={restaurant.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-1 text-indigo-600 hover:underline"
-        >
-          <ArrowTopRightOnSquareIcon className="h-4 w-4" aria-hidden />
-          View on Yelp
-        </a>
+        <YelpLogo href={restaurant.url} />
       </div>
     </div>
   );

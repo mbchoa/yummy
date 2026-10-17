@@ -1,8 +1,8 @@
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
-import { StarIcon } from "@heroicons/react/24/solid";
 import Image from "next/image";
 import Link from "next/link";
 import type { IYelpBusinessSchema } from "../../../models/YelpSchemas";
+import { YelpLogo, YelpStars } from "../../yelp";
 
 interface IRestaurantsListProps {
   isLoading: boolean;
@@ -99,13 +99,10 @@ export const RestaurantsList = ({
                   likedDishNamesByRestaurantId[restaurant.id] ?? [];
                 return (
                   <li key={restaurant.id}>
-                    <Link
-                      className="-mx-2 flex items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-indigo-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
-                      href={{
-                        pathname: `/dashboard/restaurant/[restaurantId]`,
-                        query: { restaurantId: restaurant.id },
-                      }}
-                    >
+                    {/* the name's link stretches over the whole row, and the
+                    Yelp rating sits above it as its own link, since a link
+                    can't contain another link */}
+                    <div className="relative -mx-2 flex items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-indigo-50">
                       {restaurant.imageUrl ? (
                         <Image
                           className="h-12 w-12 shrink-0 rounded object-cover"
@@ -118,18 +115,24 @@ export const RestaurantsList = ({
                         <div className="h-12 w-12 shrink-0 rounded bg-gray-200" />
                       )}
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-baseline justify-between gap-2">
-                          <span className="truncate font-medium text-indigo-600">
-                            {restaurant.name}
-                          </span>
-                          <span className="flex shrink-0 items-center gap-1 text-sm text-gray-600">
-                            <StarIcon
-                              className="h-4 w-4 text-yellow-500"
-                              aria-hidden
-                            />
-                            {restaurant.rating}
-                          </span>
-                        </div>
+                        <Link
+                          className="block truncate font-medium text-indigo-600 after:absolute after:inset-0 after:rounded-md focus:outline-none focus-visible:after:ring-2 focus-visible:after:ring-indigo-500"
+                          href={{
+                            pathname: `/dashboard/restaurant/[restaurantId]`,
+                            query: { restaurantId: restaurant.id },
+                          }}
+                        >
+                          {restaurant.name}
+                        </Link>
+                        <a
+                          href={restaurant.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="relative z-10 inline-flex items-center gap-1.5 text-xs text-gray-500 hover:underline"
+                        >
+                          <YelpStars rating={restaurant.rating} size="small" />
+                          {restaurant.reviewCount.toLocaleString()} reviews
+                        </a>
                         <p className="truncate text-sm text-gray-500">
                           {restaurant.location.address1} &middot; {dishCount}{" "}
                           {dishCount === 1 ? "dish" : "dishes"} logged
@@ -142,7 +145,7 @@ export const RestaurantsList = ({
                           </p>
                         )}
                       </div>
-                    </Link>
+                    </div>
                   </li>
                 );
               })}
@@ -183,6 +186,12 @@ export const RestaurantsList = ({
             })}
           </ul>
         </section>
+      )}
+      {Object.keys(restaurants).length > 0 && (
+        <p className="flex items-center justify-end gap-1.5 text-xs text-gray-500">
+          Restaurant details from
+          <YelpLogo href="https://www.yelp.com" />
+        </p>
       )}
     </div>
   );
