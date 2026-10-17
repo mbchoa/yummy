@@ -119,13 +119,26 @@ enum Like {
 }
 
 model Collaborator {
-  id             String   @id @default(cuid())
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  collaborator   User     @relation("collaborators", fields: [collaboratorId], references: [id], onDelete: Cascade)
+  id             String             @id @default(cuid())
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  collaborator   User               @relation("collaborators", fields: [collaboratorId], references: [id], onDelete: Cascade)
   collaboratorId String
-  owner          User     @relation("owners", fields: [ownerId], references: [id], onDelete: Cascade)
+  owner          User               @relation("owners", fields: [ownerId], references: [id], onDelete: Cascade)
   ownerId        String
+  role           CollaboratorRole   @default(EDITOR)
+  // access starts once the invite is accepted
+  status         CollaboratorStatus @default(PENDING)
 
   @@unique([collaboratorId, ownerId])
+}
+
+enum CollaboratorRole {
+  VIEWER
+  EDITOR
+}
+
+enum CollaboratorStatus {
+  PENDING
+  ACCEPTED
 }

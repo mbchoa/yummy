@@ -1,6 +1,6 @@
-import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { protectedProcedure, router } from "../trpc";
+import { getAccessToList, getListAccess } from "./helpers/listAccess";
 
 export const userSetting = router({
   switchUser: protectedProcedure
@@ -10,24 +10,9 @@ export const userSetting = router({
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      // only your own list or one shared with you can be selected
-      if (input.userId !== ctx.session.user.id) {
-        const collaborator = await ctx.prisma.collaborator.findUnique({
-          where: {
-            collaboratorId_ownerId: {
-              collaboratorId: ctx.session.user.id,
-              ownerId: input.userId,
-            },
-          },
-        });
-
-        if (collaborator === null) {
-          throw new TRPCError({
-            code: "UNAUTHORIZED",
-            message: "User does not have access to selected user's list",
-          });
-        }
-      }
+      // only your own list, or one shared with you whose invite you've
+      // accepted, can be selected
+      await getAccessToList(ctx.prisma, ctx.session.user.id, input.userId);
 
       return ctx.prisma.userSetting.update({
         where: {
@@ -38,6 +23,10 @@ export const userSetting = router({
         },
       });
     }),
+  // the list being viewed and whether the user can change it
+  access: protectedProcedure.query(({ ctx }) =>
+    getListAccess(ctx.prisma, ctx.session.user),
+  ),
   get: protectedProcedure.query(({ ctx }) => {
     return ctx.prisma.userSetting.findUniqueOrThrow({
       where: {

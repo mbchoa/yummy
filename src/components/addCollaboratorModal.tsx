@@ -1,6 +1,10 @@
 import { Dialog, Transition } from "@headlessui/react";
 import { UserIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import type { User } from "@prisma/client";
+import {
+  CollaboratorRole,
+  CollaboratorStatus,
+  type User,
+} from "@prisma/client";
 import partial from "lodash-es/partial";
 import Image from "next/image";
 import classNames from "classnames";
@@ -20,6 +24,7 @@ export const AddCollaboratorModal = ({
   const [search, setSearch] = useState("");
   const [selectedCollaboratorId, setSelectedCollaboratorId] =
     useState<string>("");
+  const [role, setRole] = useState<CollaboratorRole>(CollaboratorRole.EDITOR);
   const inputRef = useRef<HTMLInputElement>(null);
   // the server ignores searches shorter than this
   const isSearchTooShort = search.replace(/\s/g, "").length < 3;
@@ -60,12 +65,19 @@ export const AddCollaboratorModal = ({
       if (selectedCollaboratorId === "") {
         return;
       }
-      await addCollaborator({ collaboratorId: selectedCollaboratorId });
+      await addCollaborator({ collaboratorId: selectedCollaboratorId, role });
       await refetchCollaborators();
       setSearch("");
+      setRole(CollaboratorRole.EDITOR);
       closeModal();
     },
-    [addCollaborator, closeModal, refetchCollaborators, selectedCollaboratorId],
+    [
+      addCollaborator,
+      closeModal,
+      refetchCollaborators,
+      role,
+      selectedCollaboratorId,
+    ],
   );
 
   const maybeRenderSearchResults = useCallback(() => {
@@ -100,11 +112,10 @@ export const AddCollaboratorModal = ({
         <hr className="my-4" />
         <ul className="space-y-4">
           {searchResults.map((user) => {
-            const isCollaborator =
-              allCollaborators !== undefined &&
-              allCollaborators.some(
-                (collaborator) => collaborator.collaboratorId === user.id,
-              );
+            const existingCollaborator = allCollaborators?.find(
+              (collaborator) => collaborator.collaboratorId === user.id,
+            );
+            const isCollaborator = existingCollaborator !== undefined;
             const isSelected = user.id === selectedCollaboratorId;
             return (
               <li
@@ -142,7 +153,11 @@ export const AddCollaboratorModal = ({
                   </div>
                 </Button>
                 {isCollaborator && (
-                  <span className="text-xs text-gray-500">ADDED</span>
+                  <span className="text-xs text-gray-500">
+                    {existingCollaborator.status === CollaboratorStatus.PENDING
+                      ? "INVITED"
+                      : "ADDED"}
+                  </span>
                 )}
               </li>
             );
@@ -197,7 +212,7 @@ export const AddCollaboratorModal = ({
                     as="h3"
                     className="text-lg font-medium leading-6 text-gray-900"
                   >
-                    Add Collaborator
+                    Invite to your list
                   </Dialog.Title>
                   <button
                     type="button"
@@ -209,14 +224,14 @@ export const AddCollaboratorModal = ({
                   </button>
                 </div>
                 <p className="mt-1 text-sm text-gray-500">
-                  Search for someone by name or email and select them. They will
-                  be able to view and edit your list.
+                  Search for someone who has signed in before, by name or email.
+                  They&apos;ll see an invite, and get access once they accept.
                 </p>
                 <form
-                  className="mt-4 flex space-x-4"
+                  className="mt-4 space-y-3"
                   onSubmit={handleAddCollaborator}
                 >
-                  <div className="flex-1">
+                  <div>
                     <input
                       ref={inputRef}
                       type="text"
@@ -229,15 +244,36 @@ export const AddCollaboratorModal = ({
                       onChange={handleChange}
                     />
                   </div>
-                  <Button
-                    type="submit"
-                    isLoading={isAddingCollaborator}
-                    disabled={selectedCollaboratorId === ""}
-                  >
-                    Add
-                  </Button>
+                  {/* between the search box and the invite button, so the
+                  results read top to bottom */}
+                  {maybeRenderSearchResults()}
+                  <div className="flex items-center gap-3">
+                    <label className="min-w-0 flex-1">
+                      <span className="sr-only">Role</span>
+                      <select
+                        className="w-full rounded text-sm"
+                        value={role}
+                        onChange={(event) =>
+                          setRole(event.target.value as CollaboratorRole)
+                        }
+                      >
+                        <option value={CollaboratorRole.EDITOR}>
+                          Editor: can add and change
+                        </option>
+                        <option value={CollaboratorRole.VIEWER}>
+                          Viewer: can only look
+                        </option>
+                      </select>
+                    </label>
+                    <Button
+                      type="submit"
+                      isLoading={isAddingCollaborator}
+                      disabled={selectedCollaboratorId === ""}
+                    >
+                      Send invite
+                    </Button>
+                  </div>
                 </form>
-                {maybeRenderSearchResults()}
               </Dialog.Panel>
             </Transition.Child>
           </div>
