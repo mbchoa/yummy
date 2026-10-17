@@ -1,4 +1,5 @@
 import { Like, type Prisma } from "@prisma/client";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { protectedProcedure, router } from "../trpc";
 import { getEditableListOwnerId, getListAccess } from "./helpers/listAccess";
@@ -19,12 +20,19 @@ const dashboardInclude = {
   },
 } satisfies Prisma.FavoriteRestaurantInclude;
 
+// the states a saved restaurant can be in
+const savedLikeSchema = z.enum([Like.LIKE, Like.DISLIKE, Like.WANT_TO_TRY]);
+
+// restaurants on the list; removed ones are kept, hidden, so saving them
+// again brings back their dishes and note
+const onList = { removedAt: null };
+
 export const favoriteRestaurant = router({
   all: protectedProcedure
     .input(
       z
         .object({
-          like: z.enum([Like.LIKE, Like.DISLIKE, Like.UNSELECTED]),
+          like: savedLikeSchema,
         })
         .optional(),
     )
@@ -34,15 +42,35 @@ export const favoriteRestaurant = router({
         where: {
           userId: ownerId,
           like: input?.like ?? undefined,
+          ...onList,
         },
         include: dashboardInclude,
       });
     }),
+  // how each of these restaurants is saved, if at all, e.g. for search results
+  statuses: protectedProcedure
+    .input(z.object({ ids: z.array(z.string()).max(50) }))
+    .query(async ({ input, ctx }) => {
+      const { ownerId } = await getListAccess(ctx.prisma, ctx.session.user);
+      return ctx.prisma.favoriteRestaurant.findMany({
+        where: {
+          userId: ownerId,
+          restaurantId: { in: input.ids },
+          ...onList,
+        },
+        select: {
+          restaurantId: true,
+          like: true,
+        },
+      });
+    }),
+  // saves the restaurant in this state, or moves it there; saving a removed
+  // restaurant restores it
   add: protectedProcedure
     .input(
       z.object({
         id: z.string(),
-        like: z.enum([Like.LIKE, Like.DISLIKE]),
+        like: savedLikeSchema,
       }),
     )
     .mutation(async ({ input, ctx }) => {
@@ -66,45 +94,13 @@ export const favoriteRestaurant = router({
         },
         update: {
           like: input.like,
+          removedAt: null,
         },
       });
     }),
+  // hides the restaurant from the list, keeping its dishes and note
   remove: protectedProcedure
     .input(z.object({ id: z.string() }))
-    .mutation(async ({ input, ctx }) => {
-      const ownerId = await getEditableListOwnerId(
-        ctx.prisma,
-        ctx.session.user,
-      );
-      return ctx.prisma.favoriteRestaurant.delete({
-        where: {
-          restaurantId_userId: {
-            restaurantId: input.id,
-            userId: ownerId,
-          },
-        },
-      });
-    }),
-  byId: protectedProcedure
-    .input(z.object({ id: z.string() }))
-    .query(async ({ input, ctx }) => {
-      const { ownerId } = await getListAccess(ctx.prisma, ctx.session.user);
-      return ctx.prisma.favoriteRestaurant.findUnique({
-        where: {
-          restaurantId_userId: {
-            restaurantId: input.id,
-            userId: ownerId,
-          },
-        },
-      });
-    }),
-  update: protectedProcedure
-    .input(
-      z.object({
-        id: z.string(),
-        like: z.enum([Like.LIKE, Like.DISLIKE, Like.UNSELECTED]),
-      }),
-    )
     .mutation(async ({ input, ctx }) => {
       const ownerId = await getEditableListOwnerId(
         ctx.prisma,
@@ -118,8 +114,55 @@ export const favoriteRestaurant = router({
           },
         },
         data: {
-          like: input.like,
+          removedAt: new Date(),
         },
       });
+    }),
+  byId: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ input, ctx }) => {
+      const { ownerId } = await getListAccess(ctx.prisma, ctx.session.user);
+      return ctx.prisma.favoriteRestaurant.findFirst({
+        where: {
+          restaurantId: input.id,
+          userId: ownerId,
+          ...onList,
+        },
+      });
+    }),
+  setNote: protectedProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        // a blank note is stored as null
+        note: z
+          .string()
+          .trim()
+          .max(500)
+          .transform((note) => (note.length > 0 ? note : null)),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const ownerId = await getEditableListOwnerId(
+        ctx.prisma,
+        ctx.session.user,
+      );
+      const { count } = await ctx.prisma.favoriteRestaurant.updateMany({
+        where: {
+          restaurantId: input.id,
+          userId: ownerId,
+          ...onList,
+        },
+        data: {
+          note: input.note,
+        },
+      });
+
+      if (count === 0) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Save this restaurant before adding a note",
+        });
+      }
     }),
 });

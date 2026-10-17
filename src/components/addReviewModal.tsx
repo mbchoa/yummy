@@ -23,7 +23,9 @@ export const AddReviewModal = ({
 }: IAddReviewModalProps) => {
   const [name, setName] = useState("");
   const [note, setNote] = useState("");
-  const [like, setLike] = useState<Like>(Like.LIKE);
+  const [like, setLike] = useState<typeof Like.LIKE | typeof Like.DISLIKE>(
+    Like.LIKE,
+  );
   const inputRef = useRef<HTMLInputElement>(null);
   const { refetch } = trpc.foodReview.all.useQuery(
     { restaurantId },

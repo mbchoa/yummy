@@ -3,6 +3,7 @@ import {
   HandThumbUpIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
+import { Like } from "@prisma/client";
 import classNames from "classnames";
 import { useSession } from "next-auth/react";
 import { useCallback, useState } from "react";
@@ -77,7 +78,8 @@ export const FavoriteFoods = ({
           await addFoodReview({
             restaurantId,
             name: foodReview.restaurantItem.name,
-            like: foodReview.like,
+            // only restaurants can be want-to-try, never dishes
+            like: foodReview.like as Exclude<Like, typeof Like.WANT_TO_TRY>,
             review: foodReview.review ?? undefined,
           });
           await refetchFoodReviews();

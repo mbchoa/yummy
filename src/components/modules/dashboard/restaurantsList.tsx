@@ -13,8 +13,10 @@ interface IRestaurantsListProps {
   missingRestaurantIds: string[];
   dishCountByRestaurantId: Record<string, number>;
   likedDishNamesByRestaurantId: Record<string, string[]>;
+  noteByRestaurantId: Record<string, string | null>;
   // a filter is active, so an empty list means nothing matched
   isFiltered: boolean;
+  isWantToTry: boolean;
 }
 
 // the search box is in the page layout
@@ -28,7 +30,9 @@ export const RestaurantsList = ({
   missingRestaurantIds,
   dishCountByRestaurantId,
   likedDishNamesByRestaurantId,
+  noteByRestaurantId,
   isFiltered,
+  isWantToTry,
 }: IRestaurantsListProps) => {
   if (isLoading) {
     return (
@@ -54,7 +58,7 @@ export const RestaurantsList = ({
   }
 
   if (restaurants === undefined) {
-    return <p className="px-4">Unable to fetch favorite restaurants.</p>;
+    return <p className="px-4">Unable to fetch your restaurants.</p>;
   }
 
   if (
@@ -71,9 +75,15 @@ export const RestaurantsList = ({
     return (
       <div className="flex h-60 flex-col items-center justify-center space-y-4 text-center">
         <InformationCircleIcon className="h-10 w-10 text-gray-400" />
-        <p>No restaurants added yet.</p>
+        <p>
+          {isWantToTry
+            ? "Nothing saved to try yet."
+            : "No restaurants here yet."}
+        </p>
         <p className="text-sm text-gray-600">
-          Find one with search, then rate it 👍 or 👎 to save it here.
+          {isWantToTry
+            ? "When someone recommends a place, search for it and tap 🔖 to save it here."
+            : "Find one with search, then rate it 👍 or 👎 to save it here."}
         </p>
         <button
           type="button"
@@ -97,6 +107,7 @@ export const RestaurantsList = ({
                 const dishCount = dishCountByRestaurantId[restaurant.id] ?? 0;
                 const likedDishNames =
                   likedDishNamesByRestaurantId[restaurant.id] ?? [];
+                const note = noteByRestaurantId[restaurant.id] ?? null;
                 return (
                   <li key={restaurant.id}>
                     {/* the name's link stretches over the whole row, and the
@@ -137,6 +148,11 @@ export const RestaurantsList = ({
                           {restaurant.location.address1} &middot; {dishCount}{" "}
                           {dishCount === 1 ? "dish" : "dishes"} logged
                         </p>
+                        {note !== null && (
+                          <p className="truncate text-sm italic text-gray-600">
+                            {note}
+                          </p>
+                        )}
                         {likedDishNames.length > 0 && (
                           <p className="truncate text-sm text-green-800">
                             <span aria-hidden>👍 </span>

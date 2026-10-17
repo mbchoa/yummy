@@ -1,6 +1,6 @@
 # yummy
 
-A personal restaurant and dish journal. Search restaurants through the Yelp Fusion API, save the ones you like or dislike, and keep a list of the dishes you've tried at each one with a thumbs up or down. You can invite collaborators to your list, as editors who can add to and change it or viewers who can only see it. Access starts once they accept the invite.
+A personal restaurant and dish journal. Search restaurants through the Yelp Fusion API, save the ones you like, dislike or want to try (with a note on each), and keep a list of the dishes you've tried at each one with a thumbs up or down. You can invite collaborators to your list, as editors who can add to and change it or viewers who can only see it. Access starts once they accept the invite.
 
 Built with Next.js (pages router), tRPC, Prisma (Postgres), NextAuth (Auth0) and Tailwind CSS. Yelp responses are cached in Redis.
 

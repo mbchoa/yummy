@@ -63,6 +63,21 @@ export const foodReview = router({
         ctx.session.user,
       );
 
+      // dishes belong to a restaurant on the list
+      const savedRestaurant = await ctx.prisma.favoriteRestaurant.findFirst({
+        where: {
+          restaurantId: input.restaurantId,
+          userId: ownerId,
+          removedAt: null,
+        },
+      });
+      if (savedRestaurant === null) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Save this restaurant before logging dishes",
+        });
+      }
+
       await assertDishNotLogged(
         ctx.prisma,
         input.name,
