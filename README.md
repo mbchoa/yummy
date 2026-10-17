@@ -26,6 +26,25 @@ Requirements: Node 22+, pnpm and Docker.
 
    The app runs at http://localhost:3000.
 
+## Tests
+
+The server tests call the tRPC routers against a real Postgres database. They only run against the database in `TEST_DATABASE_URL`, never the one in `.env`, and they delete the rows they create.
+
+1. Create a test database next to your dev database and apply the migrations to it:
+
+   ```shell
+   createdb -h localhost -U <user> yummy_test
+   DATABASE_URL="postgresql://<user>:<password>@localhost:<port>/yummy_test" pnpm prisma migrate deploy
+   ```
+
+2. Run the tests:
+
+   ```shell
+   TEST_DATABASE_URL="postgresql://<user>:<password>@localhost:<port>/yummy_test" pnpm test
+   ```
+
+CI runs the type check, lint and tests on every pull request (`.github/workflows/ci.yaml`).
+
 ## Deployment
 
 The app is deployed on Vercel, with Postgres and Redis hosted on Railway. Production builds apply pending Prisma migrations before building. See [prisma/README.md](prisma/README.md#production-migrations).
