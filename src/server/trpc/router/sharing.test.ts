@@ -42,7 +42,7 @@ const changes = (userId: string, ownerId: string, dishId: string) => {
     "save a restaurant": () =>
       callers.favoriteRestaurant.add({ id: "another", like: "LIKE" }),
     "rate a restaurant": () =>
-      callers.favoriteRestaurant.update({ id: RESTAURANT_ID, like: "DISLIKE" }),
+      callers.favoriteRestaurant.add({ id: RESTAURANT_ID, like: "DISLIKE" }),
     "remove a restaurant": () =>
       callers.favoriteRestaurant.remove({ id: RESTAURANT_ID }),
     "log a dish": () =>
@@ -248,7 +248,7 @@ describe("the owner", () => {
     });
 
     await expect(
-      callersFor(collaboratorId, ownerId).favoriteRestaurant.update({
+      callersFor(collaboratorId, ownerId).favoriteRestaurant.add({
         id: RESTAURANT_ID,
         like: "DISLIKE",
       }),

@@ -1,4 +1,5 @@
 import {
+  BookmarkIcon,
   HandThumbDownIcon,
   HandThumbUpIcon,
 } from "@heroicons/react/24/outline";
@@ -12,11 +13,12 @@ import { AddReviewModal } from "../../../components/addReviewModal";
 import { Button } from "../../../components/button";
 import { Layout } from "../../../components/layout";
 import { FavoriteFoods } from "../../../components/modules/restaurantDetail/favoriteFoods";
-import { RemoveFromList } from "../../../components/modules/restaurantDetail/removeFromList";
 import {
   RestaurantInfo,
   RestaurantInfoSkeleton,
 } from "../../../components/modules/restaurantDetail/restaurantInfo";
+import { RestaurantNote } from "../../../components/modules/restaurantDetail/restaurantNote";
+import { showToast } from "../../../components/toast";
 import { YelpReviews } from "../../../components/modules/restaurantDetail/yelpReviews";
 import { requireAuth } from "../../../server/common/require-auth";
 import { retryServerErrors } from "../../../utils/retryServerErrors";
@@ -24,6 +26,36 @@ import { trpc } from "../../../utils/trpc";
 
 // keyed by restaurant, so moving between restaurants (e.g. from search) starts
 // with fresh state instead of the previous restaurant's rating and forms
+type SavedLike = Exclude<Like, typeof Like.UNSELECTED>;
+
+const STATE_LABELS: Record<Like, string> = {
+  [Like.LIKE]: "Liked",
+  [Like.DISLIKE]: "Disliked",
+  [Like.WANT_TO_TRY]: "Want to try",
+  [Like.UNSELECTED]: "Not saved",
+};
+
+const SAVE_BUTTONS = [
+  {
+    like: Like.WANT_TO_TRY,
+    label: "Save to try",
+    Icon: BookmarkIcon,
+    filled: "fill-indigo-500 stroke-indigo-700",
+  },
+  {
+    like: Like.DISLIKE,
+    label: "Dislike restaurant",
+    Icon: HandThumbDownIcon,
+    filled: "fill-red-500 stroke-red-700",
+  },
+  {
+    like: Like.LIKE,
+    label: "Like restaurant",
+    Icon: HandThumbUpIcon,
+    filled: "fill-green-500 stroke-green-700",
+  },
+] as const;
+
 export default function RestaurantById() {
   const { query } = useRouter<"/dashboard/restaurant/[restaurantId]">();
   return <RestaurantDetail key={query.restaurantId} />;
@@ -80,30 +112,16 @@ function RestaurantDetail() {
   // controls stay hidden
   const { data: listAccess } = trpc.userSetting.access.useQuery();
   const canEdit = listAccess?.canEdit === true;
-  // shares its cache with the dish list, so the count stays current as dishes
-  // are logged or removed
-  const { data: foodReviews } = trpc.foodReview.all.useQuery(
-    { restaurantId },
-    { enabled: savedRestaurant !== undefined && savedRestaurant !== null },
-  );
 
   // data mutation
   const { mutateAsync: addRestaurant, isLoading: isAddingRestaurant } =
     trpc.favoriteRestaurant.add.useMutation();
-  const { mutateAsync: updateRestaurant, isLoading: isUpdatingRestaurant } =
-    trpc.favoriteRestaurant.update.useMutation();
-  // one rating change at a time, so a double-click can't send two requests
-  const isSavingLike = isAddingRestaurant || isUpdatingRestaurant;
   const { mutateAsync: removeRestaurant, isLoading: isRemovingRestaurant } =
     trpc.favoriteRestaurant.remove.useMutation();
+  // one change at a time, so a double-click can't send two requests
+  const isSavingLike = isAddingRestaurant || isRemovingRestaurant;
 
   const utils = trpc.useContext();
-  const handleRemoveRestaurant = useCallback(async () => {
-    await removeRestaurant({ id: restaurantId });
-    // so coming back to this restaurant doesn't briefly show it as still saved
-    utils.favoriteRestaurant.byId.setData({ id: restaurantId }, null);
-    await router.push("/dashboard");
-  }, [removeRestaurant, restaurantId, router, utils]);
   const [like, setLike] = useState<Like>(Like.UNSELECTED);
 
   // follow the server once it has answered, including when the restaurant
@@ -114,53 +132,41 @@ function RestaurantDetail() {
     }
   }, [savedRestaurant]);
 
-  const handleDislikeClick = useCallback(async () => {
-    if (like === Like.UNSELECTED) {
-      await addRestaurant({
-        id: restaurantId,
-        like: Like.DISLIKE,
-      });
+  const saveAs = useCallback(
+    async (nextLike: SavedLike) => {
+      await addRestaurant({ id: restaurantId, like: nextLike });
       await refetch();
-      setLike(Like.DISLIKE);
-      return;
-    }
+      setLike(nextLike);
+    },
+    [addRestaurant, refetch, restaurantId],
+  );
 
-    // already disliked; removing it (and its dishes) is a separate, confirmed
-    // action
-    if (like === Like.DISLIKE) {
-      return;
-    }
-
-    await updateRestaurant({
-      id: restaurantId,
-      like: Like.DISLIKE,
-    });
-    setLike(Like.DISLIKE);
-  }, [addRestaurant, like, refetch, restaurantId, updateRestaurant]);
-
-  const handleFavoriteClick = useCallback(async () => {
-    if (like === Like.UNSELECTED) {
-      await addRestaurant({
-        id: restaurantId,
-        like: Like.LIKE,
+  // removing only hides the restaurant, so its dishes and note come back if
+  // it's saved again, and undo is just saving it again
+  const handleRemove = useCallback(
+    async (previousLike: SavedLike) => {
+      await removeRestaurant({ id: restaurantId });
+      utils.favoriteRestaurant.byId.setData({ id: restaurantId }, null);
+      setLike(Like.UNSELECTED);
+      showToast("Removed from your list.", {
+        label: "Undo",
+        onClick: () => saveAs(previousLike),
       });
-      await refetch();
-      setLike(Like.LIKE);
-      return;
-    }
+    },
+    [removeRestaurant, restaurantId, saveAs, utils],
+  );
 
-    // already liked; removing it (and its dishes) is a separate, confirmed
-    // action
-    if (like === Like.LIKE) {
-      return;
-    }
-
-    await updateRestaurant({
-      id: restaurantId,
-      like: Like.LIKE,
-    });
-    setLike(Like.LIKE);
-  }, [addRestaurant, like, refetch, restaurantId, updateRestaurant]);
+  // tapping the selected state again takes the restaurant off the list
+  const handleSelect = useCallback(
+    async (nextLike: SavedLike) => {
+      if (like === nextLike) {
+        await handleRemove(nextLike);
+        return;
+      }
+      await saveAs(nextLike);
+    },
+    [handleRemove, like, saveAs],
+  );
 
   const isLoading = isLoadingYelpRestaurant || isLoadingSavedRestaurant;
 
@@ -181,17 +187,20 @@ function RestaurantDetail() {
           {yelpRestaurantError.data?.code === "NOT_FOUND" &&
             savedRestaurant &&
             canEdit && (
-              <div className="rounded border border-gray-300 p-4">
-                <RemoveFromList
-                  dishCount={foodReviews?.length}
-                  isRemoving={isRemovingRestaurant}
-                  onRemove={handleRemoveRestaurant}
-                  prompt={
-                    <p className="text-sm text-gray-700">
-                      It&apos;s still saved in your list.
-                    </p>
+              <div className="space-y-3 rounded border border-gray-300 p-4">
+                <p className="text-sm text-gray-700">
+                  It&apos;s still saved in your list.
+                </p>
+                <Button
+                  size="sm"
+                  variant="outlined"
+                  isLoading={isRemovingRestaurant}
+                  onClick={() =>
+                    handleRemove(savedRestaurant.like as SavedLike)
                   }
-                />
+                >
+                  Remove from my list
+                </Button>
               </div>
             )}
           <Link className="text-indigo-600 hover:underline" href="/dashboard">
@@ -220,7 +229,9 @@ function RestaurantDetail() {
               </div>
             )
           )}
-          <div className="flex items-start justify-between gap-4">
+          {/* on phones the save buttons get their own row, so the name keeps the
+          width */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
             <header className="min-w-0 flex-1 space-y-2">
               {isLoadingYelpRestaurant || restaurant === undefined ? (
                 <>
@@ -234,58 +245,41 @@ function RestaurantDetail() {
                 </>
               )}
             </header>
-            <div className="flex shrink-0 items-center gap-1">
+            <div className="-ml-2 flex shrink-0 items-center gap-1 sm:ml-0">
               {!isLoading && (
-                <span className="mr-1 hidden text-sm text-gray-500 sm:inline">
-                  {like === Like.LIKE && "In your favorites"}
-                  {like === Like.DISLIKE && "In your dislikes"}
-                  {like === Like.UNSELECTED && "Not rated"}
+                <span className="order-last ml-1 text-sm text-gray-500 sm:order-first sm:ml-0 sm:mr-1">
+                  {STATE_LABELS[like]}
                 </span>
               )}
-              <Button
-                size="sm"
-                color="primary"
-                variant="ghost"
-                disabled={isLoadingYelpRestaurant || isSavingLike || !canEdit}
-                onClick={handleDislikeClick}
-                ariaLabel="Dislike restaurant"
-                ariaPressed={like === Like.DISLIKE}
-                title={like === Like.DISLIKE ? "In your dislikes" : "Dislike"}
-                LeftIcon={
-                  <HandThumbDownIcon
-                    className={classNames(
-                      "h-7 w-7",
-                      isLoading
-                        ? "fill-none stroke-gray-300"
-                        : like === Like.DISLIKE
-                          ? "fill-red-500 stroke-red-700"
-                          : "fill-none stroke-gray-500",
-                    )}
-                  />
-                }
-              />
-              <Button
-                size="sm"
-                color="primary"
-                variant="ghost"
-                disabled={isLoadingYelpRestaurant || isSavingLike || !canEdit}
-                onClick={handleFavoriteClick}
-                ariaLabel="Like restaurant"
-                ariaPressed={like === Like.LIKE}
-                title={like === Like.LIKE ? "In your favorites" : "Like"}
-                LeftIcon={
-                  <HandThumbUpIcon
-                    className={classNames(
-                      "h-7 w-7",
-                      isLoading
-                        ? "fill-none stroke-gray-300"
-                        : like === Like.LIKE
-                          ? "fill-green-500 stroke-green-700"
-                          : "fill-none stroke-gray-500",
-                    )}
-                  />
-                }
-              />
+              {SAVE_BUTTONS.map(({ like: buttonLike, label, Icon, filled }) => (
+                <Button
+                  key={buttonLike}
+                  size="sm"
+                  color="primary"
+                  variant="ghost"
+                  disabled={isLoadingYelpRestaurant || isSavingLike || !canEdit}
+                  onClick={() => handleSelect(buttonLike)}
+                  ariaLabel={label}
+                  ariaPressed={like === buttonLike}
+                  title={
+                    like === buttonLike
+                      ? `${STATE_LABELS[buttonLike]}. Tap again to remove from your list`
+                      : label
+                  }
+                  LeftIcon={
+                    <Icon
+                      className={classNames(
+                        "h-7 w-7",
+                        isLoading
+                          ? "fill-none stroke-gray-300"
+                          : like === buttonLike
+                            ? filled
+                            : "fill-none stroke-gray-500",
+                      )}
+                    />
+                  }
+                />
+              ))}
             </div>
           </div>
           {listAccess !== undefined && !canEdit && (
@@ -296,20 +290,22 @@ function RestaurantDetail() {
           <hr className="my-6" />
           {like !== Like.UNSELECTED ? (
             <>
+              {savedRestaurant && (
+                <section className="mb-6 space-y-2">
+                  <h2 className="text-xl font-medium">Note</h2>
+                  <RestaurantNote
+                    restaurantId={restaurantId}
+                    note={savedRestaurant.note}
+                    canEdit={canEdit}
+                    onSaved={refetch}
+                  />
+                </section>
+              )}
               <FavoriteFoods
                 openModal={openModal}
                 restaurantId={restaurantId}
                 canEdit={canEdit}
               />
-              {savedRestaurant && canEdit && (
-                <div className="mt-6">
-                  <RemoveFromList
-                    dishCount={foodReviews?.length}
-                    isRemoving={isRemovingRestaurant}
-                    onRemove={handleRemoveRestaurant}
-                  />
-                </div>
-              )}
             </>
           ) : (
             !isLoading && (
@@ -317,7 +313,7 @@ function RestaurantDetail() {
                 <h2 className="text-xl font-medium">Personal Reviews</h2>
                 <p className="rounded border border-gray-300 p-4 text-sm text-gray-600">
                   {canEdit
-                    ? "Rate this restaurant with a thumbs up or down to save it to your list. Then you can log the dishes you tried."
+                    ? "Been here? Rate it 👍 or 👎. Haven't yet? Tap 🔖 to save it to try. Then you can add a note and log dishes."
                     : "This restaurant isn't on this list."}
                 </p>
               </section>
@@ -336,18 +332,17 @@ function RestaurantDetail() {
   }, [
     yelpRestaurantError,
     savedRestaurant,
-    foodReviews,
     isRemovingRestaurant,
-    handleRemoveRestaurant,
+    handleRemove,
     isLoadingYelpRestaurant,
     restaurant,
-    handleDislikeClick,
+    handleSelect,
+    refetch,
     isLoading,
     isSavingLike,
     like,
     listAccess,
     canEdit,
-    handleFavoriteClick,
     openModal,
     restaurantId,
     isAddReviewModalOpen,
