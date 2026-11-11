@@ -28,7 +28,7 @@
     "classnames": "^2.5.1",
     "got": "^12.6.0",
     "ioredis": "^5.4.2",
-    "lodash-es": "^4.17.21",
+    "lodash-es": "^4.18.1",
     "next": "15.5.27",
     "next-auth": "^4.24.15",
     "nextjs-routes": "^1.0.9",
